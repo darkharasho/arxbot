@@ -1,4 +1,5 @@
 import pdb
+import discord
 
 from peewee import *
 from playhouse.sqlite_ext import *
@@ -22,8 +23,8 @@ class Config(BaseModel):
             return []
 
     @classmethod
-    def create_or_update(cls, name=str, value=None):
-        config = cls.select().where(cls.name == name).first()
+    def create_or_update(cls, name=str, value=None, guild=discord.Guild):
+        config = cls.select().where((cls.name == name) & (cls.guild_id == guild.id)).first()
         value_type = type(value).__name__
         try:
             if config:
@@ -34,10 +35,11 @@ class Config(BaseModel):
                 config = cls.select().where(cls.id == config.id).first()
             else:
                 action = "create"
+
                 config = cls.create(name=name,
                                     value=value,
                                     value_type=value_type,
-                                    guild_id=settings.GUILD_ID)
+                                    guild_id=guild.id)
             return config, action
         except Exception as e:
             print(f"[ERR] {e}")

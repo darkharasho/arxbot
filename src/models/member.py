@@ -134,7 +134,7 @@ class Member(BaseModel):
         return yaks[0]["current"]
 
     @staticmethod
-    def find_or_create(member=discord.Member):
+    def find_or_create(member=discord.Member, guild=discord.Guild):
         db_member = Member.select().where(Member.discord_id == member.id).first()
         if db_member:
             return db_member
@@ -142,6 +142,6 @@ class Member(BaseModel):
             return Member.create(
                 username=member.name,
                 discord_id=member.id,
-                guild_id=settings.GUILD_ID,
+                guild_id=guild.id,
                 created_at=datetime.datetime.now()
             )

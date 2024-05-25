@@ -2,6 +2,7 @@
 # Helpers ########################
 ##################################
 import discord
+import re
 from discord.ext import commands
 from config import settings
 

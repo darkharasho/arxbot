@@ -2,6 +2,9 @@ import pdb
 
 import discord
 import os
+import re
+import datetime
+
 from discord.ext import commands
 from discord import app_commands
 from peewee import *
@@ -26,10 +29,13 @@ async def on_ready():
     await load_db()
     await load_cogs(cog_type="cogs")
     await load_cogs(cog_type="tasks")
-    print(f'Bot is ready. Logged in as {bot.user}')
-    print('Connected to the following guilds:')
+    await load_views()
+    print("--------------------------------------------")
     for guild in bot.guilds:
         print(f'- {guild.name} (ID: {guild.id})')
+        await bot.tree.sync(guild=guild)
+    print("[FINISH]".ljust(20) + f"♾️ All Commands Loaded")
+    print(f'Bot is ready. Logged in as {bot.user}')
 
 async def load_db():
     db = SqliteDatabase('arxbot.db')
@@ -57,13 +63,23 @@ async def load_cogs(cog_type=None):
             cmd = re.sub(r'_', '-', cog[:-4])
             try:
                 await bot.load_extension(f"src.{cog_type}." + cog)
-                if cmd in Config.disabled_modules():
-                    tree.remove_command(cmd, guild=discord.Object(id=settings.GUILD_ID))
-                    print(f"[DISABLED]".ljust(20) + f"🟡 {cog_type}." + cog)
-                else:
-                    print(f"[{cog_type.upper()} LOADED]".ljust(20) + f"🟢 {cog_type}." + cog)
+                print(f"[{cog_type.upper()} LOADED]".ljust(20) + f"🟢 {cog_type}." + cog)
             except Exception as e:
                 print(f"[{cog_type.upper()} FAILED]".ljust(20) + f"🔴 {cog_type}." + cog)
+                if os.getenv('LOG_LEVEL') == "debug":
+                    raise e
+                else:
+                    print(" ".ljust(23) + f"[ERR] {e}")
+
+async def load_views():
+    print("--------------------------------------------")
+    for f in os.listdir("./src/views"):
+        view = f[:-3]
+        if f.endswith(".py"):
+            try:
+                print("[VIEW LOADED]".ljust(20) + f"🟢 views." + view)
+            except Exception as e:
+                print("[VIEW FAILED]".ljust(20) + f"🔴 views." + view)
                 if os.getenv('LOG_LEVEL') == "debug":
                     raise e
                 else:
@@ -82,7 +98,7 @@ async def on_guild_join(guild):
     if channel:
         await channel.send("Hello! Thank you for inviting me to your server!")
     if not Guild.select().where(Guild.guild_id == guild.id).first():
-        guild = Guild.create(name=guild.name, guild_id=guild.id)
+        guild = Guild.create(name=guild.name, id=guild.id)
         guild.save()
 
 
