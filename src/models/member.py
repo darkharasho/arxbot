@@ -7,12 +7,13 @@ from playhouse.sqlite_ext import *
 from config import settings
 from src import helpers
 from src.models.base_model import BaseModel
+from src.models.guild import Guild
 from src.gw2_api_client import GW2ApiClient
 
 
 class Member(BaseModel):
     username = CharField(unique=True)
-    guild_id = IntegerField()
+    guild_id = ForeignKeyField(Guild, backref="members")
     discord_id = IntegerField(unique=True)
     user_id = IntegerField(null=True)
     gw2_api_key = CharField(null=True)

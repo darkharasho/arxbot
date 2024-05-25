@@ -9,6 +9,7 @@ from config import settings
 from src.models.guild import Guild
 from src.models.member import Member
 from src.models.api_key import ApiKey
+from src.models.config import Config
 
 # Intents are required for some of the features
 intents = discord.Intents.default()
@@ -34,8 +35,8 @@ async def load_db():
     db = SqliteDatabase('arxbot.db')
     try:
         db.connect()
-        db.create_tables([Guild, ApiKey, Member])
         print("[DATABASE]".ljust(20) + f"🟢 DB Connected")
+        db.create_tables([Guild, ApiKey, Member, Config])
         print("[DATABASE]".ljust(20) + f"🟢 DB Ready")
     except Exception as e:
         print("[DATABASE]".ljust(20) + f"🔴 FAILED")
