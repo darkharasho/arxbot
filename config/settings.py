@@ -10,6 +10,7 @@ config = json.load(raw_config)
 TOKEN = config['Token']
 APPLICATION_ID = config['ApplicationID']
 GW2_API_KEY = config['GW2ApiKey']
+MAX_LEADERBOARD_MEMBERS = config.get('MaxLeaderboardMembers', 10)
 
 SET_USER_CHANNELS = [
     {
