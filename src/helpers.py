@@ -3,6 +3,7 @@
 ##################################
 import discord
 import re
+import os
 from discord.ext import commands
 from config import settings
 
@@ -12,6 +13,15 @@ def command_to_cog(command):
     cmd2cog = re.sub(r'_', '', (cmd2cog + "_cog").title())
     return cmd2cog
 
+def select_icon(icon_name, file_type="png"):
+    img_dir = os.path.dirname(os.path.abspath(__file__))
+
+    if icon_name:
+        selected_file = os.path.join(img_dir, f"../icons/{icon_name}.{file_type}")
+    else:
+        selected_file = None
+
+    return selected_file
 
 def get_by_name(nameable_objects, name):
     for nameable_object in nameable_objects:
