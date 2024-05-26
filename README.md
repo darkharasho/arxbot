@@ -1,4 +1,6 @@
+![999f4280-e0ab-4dde-80cc-5c79abd212fb-ezgif com-webp-to-png-converter](https://github.com/darkharasho/arxbot/assets/144265798/36f67316-e126-4fa9-8a33-1ec3232695ac)
 # arxbot
+
 Yet Another GW2 Discord Bot
 
 
