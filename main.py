@@ -100,8 +100,6 @@ async def on_guild_join(guild):
     if not Guild.select().where(Guild.id == guild.id).first():
         guild = Guild.create(name=guild.name, id=guild.id)
         guild.save()
-    await load_cogs(cog_type="cogs")
-    await load_cogs(cog_type="tasks")
     await bot.tree.sync(guild=guild)
 
 
