@@ -100,6 +100,7 @@ async def on_guild_join(guild):
     if not Guild.select().where(Guild.guild_id == guild.id).first():
         guild = Guild.create(name=guild.name, id=guild.id)
         guild.save()
+    await bot.tree.sync(guild=guild)
 
 
 # Event handler for when the bot is removed from a guild
