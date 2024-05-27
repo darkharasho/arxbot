@@ -94,9 +94,9 @@ async def ping(ctx):
 @bot.event
 async def on_guild_join(guild):
     print(f'Joined new guild: {guild.name} (ID: {guild.id})')
-    # channel = guild.system_channel
-    # if channel:
-        # await channel.send("Hello! Thank you for inviting me to your server!")
+    channel = guild.system_channel
+    if channel:
+        await channel.send("Hello! Thank you for inviting me to your server!")
     if not Guild.select().where(Guild.id == guild.id).first():
         guild = Guild.create(name=guild.name, id=guild.id)
         guild.save()
