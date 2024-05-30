@@ -1,22 +1,23 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+from src.models.config import Config
 
 class TmpVoiceCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.temp_channels = {}
 
-    @app_commands.command(name="tmp_voice", description="Create a temporary voice channel with specified roles allowed to join.")
+    @app_commands.command(name="tmp_voice",
+                          description="Create a temporary voice channel with specified roles allowed to join.")
     @app_commands.describe(roles="Roles allowed to join the voice channel")
     async def tmp_voice(self, interaction: discord.Interaction, roles: str):
         guild = interaction.guild
         member = interaction.user
-        alliance_role = discord.utils.get(guild.roles, name="Alliance Member")
 
-        if not alliance_role:
-            await interaction.response.send_message("Alliance role not found.", ephemeral=True)
-            return
+        # Get the role IDs from the config
+        role_ids = Config.view_tmp_vc_role_ids(guild_id=interaction.guild.id)
+        allowed_roles = [guild.get_role(role_id) for role_id in role_ids if guild.get_role(role_id)]
 
         # Parse the roles input
         role_mentions = roles.split()
@@ -34,12 +35,14 @@ class TmpVoiceCog(commands.Cog):
         # Create overwrites for the roles
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
-            alliance_role: discord.PermissionOverwrite(view_channel=True),
             member: discord.PermissionOverwrite(connect=True, move_members=True, manage_channels=True)
         }
 
         for role in role_objects:
             overwrites[role] = discord.PermissionOverwrite(connect=True)
+
+        for role in allowed_roles:
+            overwrites[role] = discord.PermissionOverwrite(view_channel=True, connect=False)
 
         # Create a new voice channel
         temp_channel = await guild.create_voice_channel(

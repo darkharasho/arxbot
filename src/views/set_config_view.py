@@ -18,10 +18,10 @@ options = [
                  value="AllowedAdminRoles",
                  description="Used In: All - which roles are allowed to run all bot commands",
                  emoji="👑"),
-    SelectOption(label="Setup User Allowed Channels",
-                 value="UserAllowedChannels",
-                 description="Limit which channels commands that can be run by anyone are allowed in",
-                 emoji="🤖"),
+    SelectOption(label="Temporary Voice Channel Visibility",
+                 value="TmpVCVisibility",
+                 description="Role allowed to see temporary voice channels, but not connect",
+                 emoji="🎙️"),
     SelectOption(label="Assign Guild Roles",
                  value="AssignGuildRoles",
                  description="Roles to assign to members who have added an API Key",
@@ -55,27 +55,18 @@ class SetConfigView(discord.ui.View):
                                                  options=admin_options,
                                                  min_values=0,
                                                  max_values=len(admin_options)))
-        elif selected_option == "UserAllowedChannels":
-            answer_key = ["leaderboard_channel_ids", "funderboard_channel_ids", "chat_channel_ids"]
-            answers = {}
-            for index, question in enumerate(settings.SET_USER_CHANNELS, start=0):
-                question_view = set_multi_config_view.SetMultiConfigView(config_name=selected_option,
-                                                                         question=question,
-                                                                         channel=interaction.channel,
-                                                                         user=interaction.user,
-                                                                         bot=self.bot,
-                                                                         guild=self.guild)
-                answer = await question_view.send_question(index)
-                answers[answer_key[index]] = answer
-                if answer == "APPLICATION_CANCEL":
-                    break
+        elif selected_option == "TmpVCVisibility":
+            view_tmp_vc_role = Config.select().where((Config.name == "view_tmp_vc_role_ids") & (Config.guild_id == self.guild.id)).first()
+            tmp_vc_options = self.role_select(existing=view_tmp_vc_role)
 
-            await self.handle_multi_question_response(name="user_allowed_channels", answers=answers,
-                                                      description="```User Allowed Channels:\nChoose which channels a "
-                                                                  "user can interact with the bot in.```",
-                                                      guild=self.guild)
-
+            self.clear_items()
+            self.embed.description = ("```Temporary Voice Channel Visibility:\nPlease select which roles will be able to view but not connect to temporary voice channels.```")
+            self.add_item(item=discord.ui.Select(placeholder="Select Temp VC Visibility Roles...",
+                                                 options=tmp_vc_options,
+                                                 min_values=0,
+                                                 max_values=len(tmp_vc_options)))
         elif selected_option == "AssignGuildRoles":
+            pass
             # answer_key = ["guild_to_role_mapping"]
             # answers = {}
             # for index, question in enumerate(settings.SET_GUILD_TO_ROLE, start=0):
@@ -128,6 +119,11 @@ class SetConfigView(discord.ui.View):
                                                    name="allowed_admin_role_ids",
                                                    event=event,
                                                    guild=self.guild)
+           elif selected_option == "TmpVCVisibility":
+               await self.set_generic_role_config(pretty_name=selected_option,
+                                                  name="view_tmp_vc_role_ids",
+                                                  event=event,
+                                                  guild=self.guild)
         else:
             pass
 

@@ -8,7 +8,7 @@ from src.models.config import Config
 
 async def ensure_admin(interaction):
     user_role_ids = [role.id for role in interaction.user.roles]
-    allowed_admin_role_ids = Config.allowed_admin_role_ids()
+    allowed_admin_role_ids = Config.allowed_admin_role_ids(guild_id=interaction.guild.id)
 
     if not allowed_admin_role_ids:
         for role in interaction.user.roles:

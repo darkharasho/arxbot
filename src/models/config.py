@@ -15,38 +15,20 @@ class Config(BaseModel):
     value_type = TextField()
 
     @classmethod
-    def allowed_admin_role_ids(cls):
-        value = cls.select().where(cls.name == "allowed_admin_role_ids").first()
+    def allowed_admin_role_ids(cls, guild_id=int):
+        value = cls.select().where((cls.name == "allowed_admin_role_ids") & (Config.guild_id == guild_id)).first()
         if value:
             return value.get_value()
         else:
             return []
 
     @classmethod
-    def user_allowed_channels(cls, nested_cfg=None):
-        if not nested_cfg:
-            nested_cfg = []
-        value = cls.select().where(cls.name == "user_allowed_channels").first()
+    def view_tmp_vc_role_ids(cls, guild_id=int):
+        value = cls.select().where((cls.name == "view_tmp_vc_role_ids") & (Config.guild_id == guild_id)).first()
         if value:
-            if nested_cfg:
-                current_dict = value.get_value()
-
-                # Traverse the dictionary using the keys
-                for key in nested_cfg:
-                    if key in current_dict:
-                        current_dict = current_dict[key]
-                    else:
-                        # Handle the case where a key is not found
-                        print(f"Key '{key}' not found.")
-                        break
-                if current_dict in ["True", "true", "False", "false"]:
-                    return eval(current_dict.title())
-                else:
-                    return current_dict
-            else:
-                return value.get_value()
+            return value.get_value()
         else:
-            return {}
+            return []
 
     @classmethod
     def create_or_update(cls, name=str, value=None, guild=discord.Guild):
