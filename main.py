@@ -18,10 +18,12 @@ from src.models.config import Config
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
+intents.voice_states = True
 
 # Create a bot instance with the command prefix "!" and the specified intents
 bot = commands.Bot(command_prefix="!", intents=intents, application_id=settings.APPLICATION_ID)
 intents = discord.Intents.default()
+
 
 # Event handler for when the bot is ready
 @bot.event
@@ -37,6 +39,7 @@ async def on_ready():
     print("[FINISH]".ljust(20) + f"♾️ All Commands Loaded")
     print(f'Bot is ready. Logged in as {bot.user}')
 
+
 async def load_db():
     db = SqliteDatabase('arxbot.db')
     try:
@@ -51,6 +54,7 @@ async def load_db():
         else:
             print(" ".ljust(23) + f"[ERR] {e}")
             pass
+
 
 async def load_cogs(cog_type=None):
     if not cog_type:
@@ -71,6 +75,7 @@ async def load_cogs(cog_type=None):
                 else:
                     print(" ".ljust(23) + f"[ERR] {e}")
 
+
 async def load_views():
     print("--------------------------------------------")
     for f in os.listdir("./src/views"):
@@ -85,10 +90,12 @@ async def load_views():
                 else:
                     print(" ".ljust(23) + f"[ERR] {e}")
 
+
 # Command to test if the bot is working
 @bot.command(name='ping')
 async def ping(ctx):
     await ctx.send('Pong!')
+
 
 # Event handler for when the bot joins a new guild
 @bot.event
@@ -107,6 +114,7 @@ async def on_guild_join(guild):
 @bot.event
 async def on_guild_remove(guild):
     print(f'Removed from guild: {guild.name} (ID: {guild.id})')
+
 
 # Start the bot with your token
 bot.run(settings.TOKEN)

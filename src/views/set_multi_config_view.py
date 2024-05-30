@@ -1,3 +1,5 @@
+import pdb
+
 import discord
 import tabulate
 import asyncio
@@ -63,6 +65,11 @@ class SetMultiConfigView(discord.ui.View):
                     embed=embed
                 )
             elif self.response_type == "roles":
+                embed = self.build_text_channel_picker(
+                    items=[role.name for role in self.guild.roles],
+                    embed=embed
+                )
+            elif self.response_type == "roles_custom":
                 embed = self.build_text_channel_picker(
                     items=[role.name for role in self.guild.roles],
                     embed=embed
