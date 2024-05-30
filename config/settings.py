@@ -29,3 +29,11 @@ SET_USER_CHANNELS = [
         "response_type": "text_channels"
     }
 ]
+
+SET_GUILD_TO_ROLE = [
+    {
+        "text": "# Guild to Role Mapping:\nPlease follow the format:\nROLE_NUMBER - GUILD_NAME, (i.e. 1 Pending Alliance Name, 2 - Guild Name Two)",
+        "field_type": "input",
+        "response_type": "roles_custom"
+    }
+]
