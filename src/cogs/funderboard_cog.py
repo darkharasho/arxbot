@@ -1,3 +1,5 @@
+import pdb
+
 import discord
 
 from discord.ext import commands
@@ -13,8 +15,8 @@ from src.models.api_key import ApiKey
 tabulate.PRESERVE_WHITESPACE = True
 
 
-async def calculate_leaderboard(name, data):
-    members = list(set([api_key.member for api_key in ApiKey.select()]))
+async def calculate_leaderboard(name, data, guild_id=int):
+    members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.guild_id == guild_id)]))
     leaderboard = []
     for member in members:
         leaderboard.append([member.username, member.gw2_name(), getattr(member, data)()])
@@ -44,21 +46,20 @@ class FunderboardCog(commands.Cog):
         description="Fun Leaderboard Stats"
     )
     async def funderboard(self, interaction):
-        if await authorization.ensure_allowed_channel(interaction, "funderboard_channel_ids"):
-            await interaction.response.defer()
-            spike_table =  await calculate_leaderboard("Spikes", "legendary_spikes")
-            supply_table = await calculate_leaderboard("Supply", "weekly_supply_spent")
-            yak_table =    await calculate_leaderboard("Yaks", "weekly_yaks_escorted")
+        await interaction.response.defer()
+        spike_table =  await calculate_leaderboard("Spikes", "legendary_spikes", guild_id=interaction.guild.id)
+        supply_table = await calculate_leaderboard("Supply", "weekly_supply_spent", guild_id=interaction.guild.id)
+        yak_table =    await calculate_leaderboard("Yaks", "weekly_yaks_escorted", guild_id=interaction.guild.id)
 
-            embed = discord.Embed(
-                title="🎉 Funderboard",
-                description=f"〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️"
-                            f"**🏆 Legendary Spikes:**```{spike_table}```\n"
-                            f"**📦 Weekly Repair Masters:**```{supply_table}```\n"
-                            f"**🐄 Weekly Yak Escorts:**```{yak_table}```\n"
-            )
+        embed = discord.Embed(
+            title="🎉 Funderboard",
+            description=f"〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️"
+                        f"**🏆 Legendary Spikes:**```{spike_table}```\n"
+                        f"**📦 Weekly Repair Masters:**```{supply_table}```\n"
+                        f"**🐄 Weekly Yak Escorts:**```{yak_table}```\n"
+        )
 
-            await interaction.followup.send(embed=embed)
+        await interaction.followup.send(embed=embed)
 
 
 async def setup(bot):

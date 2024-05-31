@@ -143,7 +143,7 @@ class AddKeyCog(commands.Cog):
             await response.edit(embed=embed)
 
             try:
-                api_key = ApiKey.create(member=db_member, name=name, value=gw2_api_key, primary=primary)
+                api_key = ApiKey.create(member=db_member, name=name, value=gw2_api_key, primary=primary, guild_id=interaction.guild.id)
                 if primary and other_keys:
                     for other_key in other_keys:
                         if other_key == api_key:
