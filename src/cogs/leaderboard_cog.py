@@ -43,21 +43,20 @@ class LeaderboardCog(commands.Cog):
         description="Leaderboards for GW2 stats"
     )
     async def leaderboard(self, interaction):
-        if await authorization.ensure_allowed_channel(interaction, "leaderboard_channel_ids"):
-            await interaction.response.defer()
-            kill_table = await calculate_leaderboard("Kills", "weekly_kill_count")
-            kdr_table = await calculate_leaderboard("KDR", "weekly_kdr")
-            capture_table = await calculate_leaderboard("Captures", "weekly_capture_count")
+        await interaction.response.defer()
+        kill_table = await calculate_leaderboard("Kills", "weekly_kill_count")
+        kdr_table = await calculate_leaderboard("KDR", "weekly_kdr")
+        capture_table = await calculate_leaderboard("Captures", "weekly_capture_count")
 
-            embed = discord.Embed(
-                title="📊 Weekly Leaderboard",
-                description=f"〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️"
-                            f"\n**⚔️ Kills: **```{kill_table}```"
-                            f"\n**🧿 KDR:**```{kdr_table}```"
-                            f"\n**🏰 Captures:**```{capture_table}```"
-            )
+        embed = discord.Embed(
+            title="📊 Weekly Leaderboard",
+            description=f"〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️"
+                        f"\n**⚔️ Kills: **```{kill_table}```"
+                        f"\n**🧿 KDR:**```{kdr_table}```"
+                        f"\n**🏰 Captures:**```{capture_table}```"
+        )
 
-            await interaction.followup.send(embed=embed)
+        await interaction.followup.send(embed=embed)
 
 
 async def setup(bot):

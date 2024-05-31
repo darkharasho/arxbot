@@ -21,3 +21,15 @@ from src.db_viewer import DBViewer
 DBViewer().guilds()
 DBViewer().members()
 ```
+### Migrations
+```shell
+# Create
+PYTHONPATH=$PWD pw_migrate create --database sqlite:///arxbot.db YOUR_MIGRATION
+
+#Migrate
+PYTHONPATH=$PWD pw_migrate migrate --database sqlite:///arxbot.db
+
+#Rollback
+PYTHONPATH=$PWD pw_migrate rollback --database sqlite:///arxbot.db
+
+```
