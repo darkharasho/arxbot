@@ -1,7 +1,11 @@
+import pdb
+
 import discord
 from discord.ext import commands
 from discord import app_commands
 from src.models.config import Config
+import random
+import string
 
 class TmpVoiceCog(commands.Cog):
     def __init__(self, bot):
@@ -44,10 +48,22 @@ class TmpVoiceCog(commands.Cog):
         for role in allowed_roles:
             overwrites[role] = discord.PermissionOverwrite(view_channel=True, connect=False)
 
-        # Create a new voice channel
+        # Generate the base channel name
+        base_channel_name = f"TmpVC - {', '.join(role.name for role in role_objects)}"
+
+        # Check if a channel with the same name exists and add a random string if it does
+        channel_name = base_channel_name
+        existing_channel_names = [channel.name for channel in guild.voice_channels]
+
+        while channel_name in existing_channel_names:
+            random_suffix = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
+            channel_name = f"{base_channel_name}-{random_suffix}"
+
+        # Create a new voice channel with a user limit of 99
         temp_channel = await guild.create_voice_channel(
-            name=f"Temp Voice - {', '.join(role.name for role in role_objects)}",
-            overwrites=overwrites
+            name=channel_name,
+            overwrites=overwrites,
+            user_limit=99
         )
 
         # Store the temp channel ID
