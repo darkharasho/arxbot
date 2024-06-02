@@ -117,6 +117,28 @@ class Member(BaseModel):
         yaks = GW2ApiClient(api_key=self.api_key).account_achievements(name="A Pack Dolyak's Best Friend")
         return yaks[0]["current"]
 
+    def gw2_guild_ids(self):
+        gw2_guild_ids = GW2ApiClient(api_key=self.api_key).account()
+        return gw2_guild_ids["guilds"]
+
+    def gw2_guild_names(self):
+        gw2_guild_ids = self.gw2_guild_ids()
+        gw2_guild_names = []
+        for guild_id in gw2_guild_ids:
+            gw2_guild = GW2ApiClient(api_key=self.api_key, guild_id=guild_id).guild(gw2_guild_id=guild_id)
+            full_gw2_guild_name = f"{gw2_guild['name']} [{gw2_guild['tag']}]"
+            gw2_guild_names.append(full_gw2_guild_name)
+        return gw2_guild_names
+
+    def gw2_guild_tags(self):
+        gw2_guild_ids = self.gw2_guild_ids()
+        gw2_guild_tags = []
+        for guild_id in gw2_guild_ids:
+            gw2_guild = GW2ApiClient(api_key=self.api_key, guild_id=guild_id).guild(gw2_guild_id=guild_id)
+            gw2_guild_tags.append(gw2_guild['tag'])
+        return gw2_guild_tags
+
+
     @staticmethod
     def find_or_create(member=discord.Member, guild=discord.Guild):
         db_member = Member.select().where((Member.discord_id == member.id) & (Member.guild_id == guild.id)).first()

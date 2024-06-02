@@ -38,6 +38,9 @@ class StatsCog(commands.Cog):
                 color=member.top_role.color)
             embed.set_thumbnail(url=member.display_avatar.url)
 
+            embed.add_field(name="", value="```------ Account Details ------```", inline=False)
+            embed.add_field(name="Guilds", value=f"```" + '\n'.join(db_member.gw2_guild_names()) + "```", inline=False)
+
             embed.add_field(name="", value="```----- Guild Wars 2 Stats -----```", inline=False)
             embed.add_field(name="Accounts", value=f"```" + str(len(db_member.api_keys)) + "```")
             embed.add_field(name="WvW Rank", value=f"```" + str(gw2_account_info["wvw_rank"]) + "```")
