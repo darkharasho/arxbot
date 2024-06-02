@@ -37,3 +37,16 @@ SET_GUILD_TO_ROLE = [
         "response_type": "roles_custom"
     }
 ]
+
+SET_VERIFICATION = [
+    {
+        "text": "# Guild Verification:\n Which roles should be auto assigned based on Guild Tag?",
+        "field_type": "input",
+        "response_type": "roles"
+    },
+    {
+        "text": "# Guild Verification:\n Additional roles to always add?",
+        "field_type": "input",
+        "response_type": "roles"
+    }
+]

@@ -22,9 +22,9 @@ options = [
                  value="TmpVCVisibility",
                  description="Role allowed to see temporary voice channels, but not connect",
                  emoji="🎙️"),
-    SelectOption(label="Assign Guild Roles",
-                 value="AssignGuildRoles",
-                 description="Roles to assign to members who have added an API Key",
+    SelectOption(label="Guild Verification",
+                 value="GuildVerification",
+                 description="Guild roles to assign to members who have added an API Key",
                  emoji="🛡️")
 ]
 
@@ -65,32 +65,25 @@ class SetConfigView(discord.ui.View):
                                                  options=tmp_vc_options,
                                                  min_values=0,
                                                  max_values=len(tmp_vc_options)))
-        elif selected_option == "AssignGuildRoles":
-            pass
-            # answer_key = ["guild_to_role_mapping"]
-            # answers = {}
-            # for index, question in enumerate(settings.SET_GUILD_TO_ROLE, start=0):
-            #     question_view = set_multi_config_view.SetMultiConfigView(config_name=selected_option,
-            #                                                              question=question,
-            #                                                              channel=interaction.channel,
-            #                                                              user=interaction.user,
-            #                                                              bot=self.bot,
-            #                                                              guild=self.guild)
-            #     answer = await question_view.send_question(index)
-            #     guild_to_role_mapping = []
-            #     for answer in answer.split(','):
-            #         g2r_map = {
-            #             "role_id": answer.split(' - ')[0],
-            #             "guild_name": answer.split(' - ')[1]
-            #         }
-            #         guild_to_role_mapping.append(g2r_map)
-            #     answers[answer_key[index]] = guild_to_role_mapping
-            #     if answer == "APPLICATION_CANCEL":
-            #         break
-            #
-            # await self.handle_multi_question_response(name="assign_guild_roles", answers=answers,
-            #                                           description="```Guild to Role Mapping:\nPlease follow the format:\nROLE_NUMBER - GUILD_NAME, (i.e. 1 Pending Alliance Name, 2 - Guild Name Two)```",
-            #                                           guild=self.guild)
+        elif selected_option == "GuildVerification":
+            answer_key = ["allowed_roles", "additional_roles"]
+            answers = {}
+            for index, question in enumerate(settings.SET_VERIFICATION, start=0):
+                question_view = set_multi_config_view.SetMultiConfigView(config_name=selected_option,
+                                                                         question=question,
+                                                                         channel=interaction.channel,
+                                                                         guild=self.guild,
+                                                                         bot=self.bot,
+                                                                         user=interaction.user)
+                answer = await question_view.send_question(index)
+                answers[answer_key[index]] = answer
+                if answer == "APPLICATION_CANCEL":
+                    break
+
+            self.clear_items()
+            await self.handle_multi_question_response(name="guild_verification", answers=answers,
+                                                      description="```Guild Verification:\nAuto role on gw2 guild verify.```",
+                                                      guild=self.guild)
 
         await self.msg.channel.send(embed=self.embed, view=self)
 

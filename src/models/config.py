@@ -23,6 +23,14 @@ class Config(BaseModel):
             return []
 
     @classmethod
+    def guild_allowed_roles(cls, guild_id=int):
+        value = cls.select().where((cls.name == "guild_verification") & (Config.guild_id == guild_id)).first()
+        if value:
+            return value.get_value()
+        else:
+            return {}
+
+    @classmethod
     def view_tmp_vc_role_ids(cls, guild_id=int):
         value = cls.select().where((cls.name == "view_tmp_vc_role_ids") & (Config.guild_id == guild_id)).first()
         if value:
