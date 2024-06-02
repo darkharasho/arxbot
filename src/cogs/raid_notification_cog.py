@@ -30,6 +30,7 @@ class RaidNotificationCog(commands.Cog):
         app_commands.Choice(name="🔓 Open Tag", value="open_raid"),
     ])
     async def raid_notification(self, interaction, wvw_map: str, raid_type: str, ping: discord.Role):
+        return
         await interaction.response.defer(ephemeral=True)
 
         gw2_api_client = GW2ApiClient()
