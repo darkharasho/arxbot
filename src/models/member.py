@@ -78,22 +78,6 @@ class Member(BaseModel):
     def weekly_yaks_escorted(self):
         return self.gw2_stats["yaks"]["this_week"] - self.gw2_stats["yaks"]["last_week"]
 
-    def raid_day_count(self):
-        from src.models.attendance import Attendance
-        return self.attendances.where(Attendance.raid_type == "raid_day").count()
-
-    def off_day_count(self):
-        from src.models.attendance import Attendance
-        return self.attendances.where(Attendance.raid_type == "off_day").count()
-
-    def last_attended(self):
-        from src.models.attendance import Attendance
-        last_attendance = self.attendances.order_by(Attendance.date.desc()).limit(1).first()
-        if last_attendance:
-            return last_attendance.date
-        else:
-            return None
-
     def gw2_name(self):
         if self.gw2_username:
             return self.gw2_username
