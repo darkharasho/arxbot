@@ -135,7 +135,7 @@ class Member(BaseModel):
 
     @staticmethod
     def find_or_create(member=discord.Member, guild=discord.Guild):
-        db_member = Member.select().where(Member.discord_id == member.id).first()
+        db_member = Member.select().where((Member.discord_id == member.id) & (Member.guild_id == guild.id)).first()
         if db_member:
             return db_member
         else:
