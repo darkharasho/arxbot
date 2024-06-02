@@ -24,6 +24,14 @@ class VerifyCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         db_member = Member.find_or_create(interaction.user, guild=interaction.guild)
+        if len(db_member.api_keys) == 0:
+            embed = discord.Embed(
+                title="Verification Results",
+                color=discord.Color.red(),
+                description=f"You have no API keys! Use `/api-key` to add one."
+            )
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            return
         guild_tags = db_member.gw2_guild_tags()
         verify_config = Config.guild_allowed_roles(guild_id=interaction.guild.id)
 
