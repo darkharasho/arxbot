@@ -13,8 +13,8 @@ from src.models.api_key import ApiKey
 tabulate.PRESERVE_WHITESPACE = True
 
 
-async def calculate_leaderboard(name, data):
-    members = list(set([api_key.member for api_key in ApiKey.select()]))
+async def calculate_leaderboard(name, data, guild):
+    members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.guild_id == guild.id)]))
     leaderboard = []
     for member in members:
         leaderboard.append([member.username, member.gw2_name(), getattr(member, data)()])
@@ -44,9 +44,9 @@ class LeaderboardCog(commands.Cog):
     )
     async def leaderboard(self, interaction):
         await interaction.response.defer()
-        kill_table = await calculate_leaderboard("Kills", "weekly_kill_count")
-        kdr_table = await calculate_leaderboard("KDR", "weekly_kdr")
-        capture_table = await calculate_leaderboard("Captures", "weekly_capture_count")
+        kill_table = await calculate_leaderboard("Kills", "weekly_kill_count", interaction.guild)
+        kdr_table = await calculate_leaderboard("KDR", "weekly_kdr", interaction.guild)
+        capture_table = await calculate_leaderboard("Captures", "weekly_capture_count", interaction.guild)
 
         embed = discord.Embed(
             title="📊 Weekly Leaderboard",
