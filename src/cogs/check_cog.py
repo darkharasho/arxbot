@@ -25,6 +25,7 @@ class CheckCog(commands.Cog):
     def model_to_dict(self, model):
         """Convert a Peewee model instance to a dictionary."""
         return {
+            'id': model.id,
             'value': model.value,
             'name': model.name,
             'primary': model.primary
