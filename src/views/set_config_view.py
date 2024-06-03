@@ -68,7 +68,7 @@ class SetConfigView(discord.ui.View):
                                                  min_values=0,
                                                  max_values=len(tmp_vc_options)))
         elif selected_option == "GuildVerification":
-            answer_key = ["gw2_guild_ids", "allowed_roles", "additional_roles"]
+            answer_key = ["gw2_to_discord_mapping", "allowed_roles", "additional_roles"]
             answers = {}
             for index, question in enumerate(settings.SET_VERIFICATION, start=0):
                 question_view = set_multi_config_view.SetMultiConfigView(config_name=selected_option,
@@ -78,17 +78,34 @@ class SetConfigView(discord.ui.View):
                                                                          bot=self.bot,
                                                                          user=interaction.user)
                 answer = await question_view.send_question(index)
-                if answer_key[index] == "gw2_guild_ids":
+                if answer_key[index] == "gw2_to_discord_mapping":
                     # Call gw2 api guild search and convert name -> id
-                    for guild_name in answer.split(','):
+                    guild_name_and_ids = []
+                    for guild_mapping in answer.split(','):
+                        guild_name, guild_tag, discord_role_name = guild_mapping.split('|')
+
+                        # Trim whitespace from the guild_name and discord_role_name
+                        guild_name = guild_name.strip()
+                        discord_role_name = discord_role_name.strip()
+
+                        # Search for the guild ID using the trimmed guild_name
                         guild_id = GW2ApiClient().guild_search(guild_name=guild_name)
 
-                        if len(guild_id) > 0:
-                            # Use setdefault to ensure the list exists
-                            answers.setdefault(answer_key[index], [])
-                            # Use extend to add elements to the list
-                            answers[answer_key[index]].append(guild_id[0])
-                    pass
+                        # Search for the role in the guild, ignoring case
+                        discord_role = next(
+                            (r for r in self.guild.roles if r.name.lower() == discord_role_name.lower()), None)
+
+                        if len(guild_id) > 0 and discord_role:
+                            gw2_guild = GW2ApiClient().guild(gw2_guild_id=guild_id[0])
+                            guild_name_and_ids.append(
+                                {
+                                    "guild_id": gw2_guild["id"],
+                                    "guild_name": gw2_guild["name"],
+                                    "guild_tag": gw2_guild["tag"],
+                                    "discord_role_id": discord_role.id
+                                }
+                            )
+                    answers[answer_key[index]] = guild_name_and_ids
                 else:
                     answers[answer_key[index]] = answer
                 if answer == "APPLICATION_CANCEL":
