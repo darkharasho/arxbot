@@ -22,7 +22,7 @@ class RemoveKeyCog(commands.Cog):
     )
     async def remove_key(self, interaction):
         await interaction.response.defer(ephemeral=True)
-        db_member = Member.find_or_create(interaction.user)
+        db_member = Member.find_or_create(interaction.user, guild=interaction.guild)
         embed = discord.Embed(
             title="Remove Key",
             description=""
