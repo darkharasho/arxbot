@@ -13,6 +13,7 @@ from tabulate import SEPARATING_LINE
 from src.views import set_multi_config_view
 from src.models.config import Config
 from src.gw2_api_client import GW2ApiClient
+from src.lib.smart_embed import SmartEmbed
 
 
 options = [
@@ -153,29 +154,34 @@ class SetConfigView(discord.ui.View):
 
     async def set_generic_config(self, name=None, value=None, send_response=True, guild=discord.Guild):
         configuration, action = Config.create_or_update(name=name, value=value, guild=guild)
+        embed = SmartEmbed(title="Configuration Update")
+
         if not configuration:
-            self.embed.color = 0xf23f42
-            self.embed.description = "```ERR:\nUnable to create/update config```"
+            embed.color = 0xf23f42
+            embed.description = "```ERR:\nUnable to create/update config```"
         else:
-            self.embed.add_field(name="Action", value=f"`{action}`", inline=False)
+            embed.add_field(name="Action", value=f"`{action}`", inline=False)
+
             config_value = configuration.get_value()
-            if type(config_value) == dict:
+            if isinstance(config_value, dict):
                 for key, value in config_value.items():
-                    formatted_value = value
-                    if type(formatted_value) == list:
-                        formatted_value = "\n".join([str(v)[:500] for v in value])
-                    elif type(formatted_value) == dict:
-                        formatted_value = ""
-                        for k, v in value.items():
-                            formatted_value += f"{k}: {v[:500]}\n"
-                    self.embed.add_field(name=key.title(), value=f"{formatted_value[:500]}")
+                    if isinstance(value, list):
+                        formatted_value = "\n".join([str(v) for v in value])
+                        embed.add_field(name=key.title(), value=formatted_value, value_type="dict", inline=False)
+                    elif isinstance(value, dict):
+                        embed.add_field(name=key.title(), value=value, value_type="dict", inline=False)
+                    else:
+                        embed.add_field(name=key.title(), value=str(value), value_type="string", inline=False)
             else:
                 shortened_value = configuration.get_value()[:800]
-                self.embed.add_field(name=name.title(), value=f"`{shortened_value}`", inline=True)
+                embed.add_field(name=name.title(), value=f"`{shortened_value}`", value_type="string", inline=True)
+
+        embeds = embed.create_embeds()
 
         self.clear_items()
         if send_response:
-            await self.msg.channel.send(embed=self.embed, view=self)
+            for emb in embeds:
+                await self.msg.channel.send(embed=emb, view=self)
 
     async def set_generic_role_config(self, pretty_name=None, name=None, event=None, multi=True, guild=discord.Guild):
         if multi:
@@ -242,6 +248,6 @@ class SetConfigView(discord.ui.View):
             return
         await self.set_generic_config(name=name,
                                       value=answers,
-                                      send_response=False,
+                                      send_response=True,
                                       guild=guild)
         self.embed.description = description
