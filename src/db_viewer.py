@@ -1,3 +1,8 @@
+import json
+import pdb
+
+import discord
+
 from discord.ext import commands
 from config import settings
 from tabulate import tabulate
@@ -14,7 +19,9 @@ class DBViewer:
         self.db = SqliteDatabase('arxbot.db')
         self.return_string = return_string
 
-    def member(self, member: Member):
+    def member(self, member: Member, guild: discord.Guild):
+        if not member.guild_id.id == guild.id:
+            return
         member_data = [
             [
                 member.id,

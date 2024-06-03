@@ -70,6 +70,17 @@ class GW2ApiClient:
         else:
             print(f"Request failed with status code {response.status_code}")
 
+    def guild_search(self, *args, **kwargs):
+        guild_name = kwargs.get('guild_name', None)
+        ping_url = self.url + f"/guild/search?name={guild_name}"
+        response = requests.get(ping_url, headers=self.headers)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            return json.loads(response.text)
+        else:
+            print(f"Request failed with status code {response.status_code}")
+
     async def aio_account_achievements(self, *args, **kwargs):
         async with aiohttp.ClientSession() as session:
             ids = kwargs.get('ids', None)
