@@ -40,6 +40,11 @@ SET_GUILD_TO_ROLE = [
 
 SET_VERIFICATION = [
     {
+        "text": "# Guild Verification:\n What are the full, exact, guild names of the allowed guilds?",
+        "field_type": "input",
+        "response_type": "comma_separated_list"
+    },
+    {
         "text": "# Guild Verification:\n Which roles should be auto assigned based on Guild Tag?",
         "field_type": "input",
         "response_type": "roles"
