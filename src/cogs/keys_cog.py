@@ -6,6 +6,7 @@ from config import settings
 from src.gw2_api_client import GW2ApiClient
 from src.tasks.stat_updater_task import StatUpdaterTask
 from peewee import *
+from src.models.member import Member
 
 class KeysCog(commands.Cog):
     def __init__(self, bot):
