@@ -96,7 +96,7 @@ class SetConfigView(discord.ui.View):
                             (r for r in self.guild.roles if r.name.lower() == discord_role_name.lower()), None)
 
                         if len(guild_id) > 0 and discord_role:
-                            gw2_guild = GW2ApiClient().guild(gw2_guild_id=guild_id[0])
+                            gw2_guild = GW2ApiClient().guild(gw2_guild_id=guild_id[0], auth=False)
                             guild_name_and_ids.append(
                                 {
                                     "guild_id": gw2_guild["id"],
@@ -163,14 +163,15 @@ class SetConfigView(discord.ui.View):
                 for key, value in config_value.items():
                     formatted_value = value
                     if type(formatted_value) == list:
-                        formatted_value = "\n".join([str(v) for v in value])
+                        formatted_value = "\n".join([str(v)[:500] for v in value])
                     elif type(formatted_value) == dict:
                         formatted_value = ""
                         for k, v in value.items():
-                            formatted_value += f"{k}: {v}\n"
-                    self.embed.add_field(name=key.title(), value=f"{formatted_value}")
+                            formatted_value += f"{k}: {v[:500]}\n"
+                    self.embed.add_field(name=key.title(), value=f"{formatted_value[:500]}")
             else:
-                self.embed.add_field(name=name.title(), value=f"`{configuration.get_value()}`", inline=True)
+                shortened_value = configuration.get_value()[:800]
+                self.embed.add_field(name=name.title(), value=f"`{shortened_value}`", inline=True)
 
         self.clear_items()
         if send_response:
