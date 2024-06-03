@@ -1,3 +1,5 @@
+import pdb
+
 import discord
 import asyncio
 
@@ -32,25 +34,18 @@ class VerifyCog(commands.Cog):
             )
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
-        guild_tags = db_member.gw2_guild_tags()
         gw2_guild_ids = db_member.gw2_guild_ids()
         verify_config = Config.guild_allowed_roles(guild_id=interaction.guild.id)
 
         roles_to_assign = []
-        for tag in guild_tags:
-            role = next((r for r in interaction.guild.roles if r.name.lower() == tag.lower()), None)
-            if role:
-                if role.id in verify_config["allowed_roles"]:
-                    roles_to_assign.append(role)
+        for guild_mapping in verify_config["gw2_to_discord_mapping"]:
+            role = discord.utils.get(interaction.guild.roles, id=int(guild_mapping['discord_role_id']))
+            if guild_mapping["guild_id"] in gw2_guild_ids:
+                roles_to_assign.append(role)
 
         embed = discord.Embed(title="Verification Results", color=discord.Color.blue())
 
         if roles_to_assign:
-            if verify_config["additional_roles"]:
-                for role_id in verify_config["additional_roles"]:
-                    role = discord.utils.get(interaction.guild.roles, id=role_id)
-                    if role:
-                        roles_to_assign.append(role)
             try:
                 await interaction.user.add_roles(*roles_to_assign)
                 role_mentions = [role.mention for role in roles_to_assign]
