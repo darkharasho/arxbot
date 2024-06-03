@@ -40,14 +40,9 @@ SET_GUILD_TO_ROLE = [
 
 SET_VERIFICATION = [
     {
-        "text": "# Guild Verification:\n What are the full, exact, guild names of the allowed guilds?",
+        "text": "# Guild Verification:\n Create the mapping of guild -> discord role.\nFormat: `Guild Name | Guild Tag | Discord Role Name, Second Guild Name | Second Guild Tag | Second Discord Role Name, etc`",
         "field_type": "input",
         "response_type": "comma_separated_list"
-    },
-    {
-        "text": "# Guild Verification:\n Which roles should be auto assigned based on Guild Tag?",
-        "field_type": "input",
-        "response_type": "roles"
     },
     {
         "text": "# Guild Verification:\n Additional roles to always add?",

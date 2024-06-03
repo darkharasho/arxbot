@@ -33,6 +33,7 @@ class VerifyCog(commands.Cog):
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
         guild_tags = db_member.gw2_guild_tags()
+        gw2_guild_ids = db_member.gw2_guild_ids()
         verify_config = Config.guild_allowed_roles(guild_id=interaction.guild.id)
 
         roles_to_assign = []
