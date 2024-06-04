@@ -13,7 +13,7 @@ from src.lib.logger import logger
 
 
 class Member(BaseModel):
-    username = CharField(unique=True)
+    username = CharField()
     guild_id = ForeignKeyField(Guild, backref="members")
     discord_id = IntegerField()
     user_id = IntegerField(null=True)
