@@ -26,6 +26,7 @@ class Member(BaseModel):
     class Meta:
         indexes = (
             (('guild_id', 'discord_id'), True),  # Composite unique index
+            (('guild_id', 'username'), True),    # Composite unique index
         )
 
     @property
@@ -154,9 +155,6 @@ class Member(BaseModel):
         if db_member:
             return db_member
         else:
-            logger.info(guild.id)
-            logger.info(guild.name)
-            logger.info(member.name)
             return Member.create(
                 username=member.name,
                 discord_id=member.id,
