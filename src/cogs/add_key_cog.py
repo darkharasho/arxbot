@@ -22,7 +22,7 @@ class AddKeyCog(commands.Cog):
         name="add-key",
         description="Add an API Key. Requires: account, characters, progression, inventories, and builds"
     )
-    async def add_key(self, interaction, gw2_api_key: str, primary: bool):
+    async def add_key(self, interaction, gw2_api_key: str, primary: bool = True):
         await interaction.response.defer(ephemeral=True)
         embed = discord.Embed(
             title="Checking API key...",
