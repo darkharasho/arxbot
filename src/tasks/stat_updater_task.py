@@ -70,8 +70,8 @@ class StatUpdaterTask(commands.Cog):
         captures = 0
         for api_key in member.api_keys:
             conqueror = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Emblem of the Conqueror")
-            if conqueror != "Request failed with status code 404":
-                captures += conqueror[0]["current"] + (conqueror[0].get("repeated", 0) * 100)
+            if conqueror:
+                captures += conqueror[0].get("current", 0) + (conqueror[0].get("repeated", 0) * 100)
         await self.update(member=member, stat_name="captures", stat=captures)
 
     async def update_rank_count(self, member):
@@ -79,7 +79,7 @@ class StatUpdaterTask(commands.Cog):
         wvw_ranks = 0
         for api_key in member.api_keys:
             account = await GW2ApiClient(api_key=api_key.value).aio_account()
-            if account != "Request failed with status code 404":
+            if account:
                 wvw_ranks += account["wvw_rank"]
         await self.update(member=member, stat_name="wvw_ranks", stat=wvw_ranks)
 
@@ -88,7 +88,7 @@ class StatUpdaterTask(commands.Cog):
         deaths = 0
         for api_key in member.api_keys:
             characters = await GW2ApiClient(api_key=api_key.value).aio_characters(ids="all")
-            if characters != "Request failed with status code 404":
+            if characters:
                 for character in characters:
                     deaths += character["deaths"]
         await self.update(member=member, stat_name="deaths", stat=deaths)
@@ -98,7 +98,7 @@ class StatUpdaterTask(commands.Cog):
         supply = 0
         for api_key in member.api_keys:
             repair_master = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Repair Master")
-            if repair_master != "Request failed with status code 404":
+            if repair_master:
                 supply += repair_master[0]["current"]
         await self.update(member=member, stat_name="supply", stat=supply)
 
@@ -107,7 +107,7 @@ class StatUpdaterTask(commands.Cog):
         yaks = 0
         for api_key in member.api_keys:
             yak_escorts = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="A Pack Dolyak's Best Friend")
-            if yak_escorts != "Request failed with status code 404":
+            if yak_escorts:
                 yaks += yak_escorts[0]["current"]
         await self.update(member=member, stat_name="yaks", stat=yaks)
 
