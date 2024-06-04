@@ -12,11 +12,11 @@ class GW2ApiClient:
     def __init__(self, *args, **kwargs):
         # Define the URL you want to make a GET request to
         self.url = "https://api.guildwars2.com/v2"
-        api_key = kwargs.get('api_key', settings.GW2_API_KEY)
+        self.api_key = kwargs.get('api_key', settings.GW2_API_KEY)
 
         # Define your authorization headers (replace with your actual credentials)
         self.headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {self.api_key}",
             "X-Schema-Version": "latest"
         }
         with open("api_achievements_map.json", 'r') as json_file:
