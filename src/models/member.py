@@ -155,6 +155,7 @@ class Member(BaseModel):
             return db_member
         else:
             logger.info(guild.id)
+            logger.info(guild.name)
             logger.info(member.name)
             return Member.create(
                 username=member.name,
