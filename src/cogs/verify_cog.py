@@ -35,6 +35,14 @@ class VerifyCog(commands.Cog):
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
         gw2_guild_ids = db_member.gw2_guild_ids()
+        if len(gw2_guild_ids) == 0:
+            embed = discord.Embed(
+                title="Verification Results",
+                color=discord.Color.red(),
+                description=f"You have no guilds. This can happen because of a bad api key / for whatever reason GW2 API needs the Guilds."
+            )
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            return
         verify_config = Config.guild_allowed_roles(guild_id=interaction.guild.id)
 
         roles_to_assign = []
