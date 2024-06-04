@@ -9,6 +9,7 @@ from src import helpers
 from src.models.base_model import BaseModel
 from src.models.guild import Guild
 from src.gw2_api_client import GW2ApiClient
+from src.lib.logger import logger
 
 
 class Member(BaseModel):
@@ -150,6 +151,7 @@ class Member(BaseModel):
     @staticmethod
     def find_or_create(member=discord.Member, guild=discord.Guild):
         db_member = Member.select().where((Member.discord_id == member.id) & (Member.guild_id == guild.id)).first()
+        logger.info(member.name)
         if db_member:
             return db_member
         else:
