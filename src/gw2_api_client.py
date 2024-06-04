@@ -12,11 +12,11 @@ class GW2ApiClient:
     def __init__(self, *args, **kwargs):
         # Define the URL you want to make a GET request to
         self.url = "https://api.guildwars2.com/v2"
-        self.api_key = kwargs.get('api_key', settings.GW2_API_KEY)
+        api_key = kwargs.get('api_key', settings.GW2_API_KEY)
 
         # Define your authorization headers (replace with your actual credentials)
         self.headers = {
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {api_key}",
             "X-Schema-Version": "latest"
         }
         with open("api_achievements_map.json", 'r') as json_file:
@@ -95,8 +95,11 @@ class GW2ApiClient:
             elif name:
                 ping_url += f"?ids={self.api_achievements_map[name]}"
             async with session.get(ping_url, headers=self.headers) as resp:
-                account_achievements = await resp.json()
-                return account_achievements
+                if resp.status == 404:
+                    return []
+                else:
+                    account_achievements = await resp.json()
+                    return account_achievements
 
     async def aio_account(self, *args, **kwargs):
         async with aiohttp.ClientSession() as session:
@@ -187,13 +190,10 @@ class GW2ApiClient:
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
             return json.loads(response.text)
+        elif response.status_code == 404:
+            return []
         else:
-            ping_url += f"&access_token={self.api_key}"
-            response = requests.get(ping_url)
-            if response.status_code == 200:
-                return json.loads(response.text)
-            else:
-                print(f"Request failed with status code {response.status_code}")
+            print(f"Request failed with status code {response.status_code}")
 
     def wvw_matches(self):
         account = self.account()
