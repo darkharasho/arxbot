@@ -25,6 +25,7 @@ class VerifyCog(commands.Cog):
 
     @tasks.loop(hours=24)
     async def verify_members(self):
+        return
         for guild in self.bot.guilds:
             verify_config = Config.guild_allowed_roles(guild_id=guild.id)
             async for member in guild.fetch_members(limit=None):
