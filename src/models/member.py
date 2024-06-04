@@ -119,7 +119,10 @@ class Member(BaseModel):
 
     def gw2_guild_ids(self):
         gw2_guild_ids = GW2ApiClient(api_key=self.api_key).account()
-        return gw2_guild_ids["guilds"]
+        if gw2_guild_ids:
+            return gw2_guild_ids["guilds"]
+        else:
+            return []
 
     def gw2_guild_names(self):
         gw2_guild_ids = self.gw2_guild_ids()

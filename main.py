@@ -13,19 +13,7 @@ from src.models.guild import Guild
 from src.models.member import Member
 from src.models.api_key import ApiKey
 from src.models.config import Config
-
-import sys
-import logging
-
-logger = logging.getLogger('')
-logger.setLevel(logging.INFO)
-fh = logging.FileHandler('arxbot.log')
-sh = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter('[%(asctime)s] %(levelname)s [%(filename)s.%(funcName)s:%(lineno)d] %(message)s', datefmt='%a, %d %b %Y %H:%M:%S')
-fh.setFormatter(formatter)
-sh.setFormatter(formatter)
-logger.addHandler(fh)
-logger.addHandler(sh)
+from src.lib.logger import logger
 
 # Intents are required for some of the features
 intents = discord.Intents.default()
