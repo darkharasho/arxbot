@@ -18,11 +18,7 @@ class AddKeyCog(commands.Cog):
         self.bot = bot
         self.db = SqliteDatabase('eww_bot.db')
 
-    @app_commands.command(
-        name="add-key",
-        description="Add an API Key. Requires: account, characters, progression, inventories, and builds"
-    )
-    async def add_key(self, interaction, gw2_api_key: str, primary: bool = True):
+    async def process_key(self, interaction, gw2_api_key: str, primary: bool = True):
         await interaction.response.defer(ephemeral=True)
         embed = discord.Embed(
             title="Checking API key...",
@@ -205,6 +201,21 @@ class AddKeyCog(commands.Cog):
             embed.add_field(name="", value="")
             embed.add_field(name="GW2 API Key", value=f"```{gw2_api_key}```", inline=False)
             await response.edit(embed=embed)
+
+
+    @app_commands.command(
+        name="add-key",
+        description="Add an API Key. Requires: account, characters, progression, inventories, and builds"
+    )
+    async def add_key(self, interaction, gw2_api_key: str, primary: bool = True):
+        await self.process_key(interaction=interaction, gw2_api_key=gw2_api_key, primary=primary)
+
+    @app_commands.command(
+        name="api-key",
+        description="(Alias for /add-key) Requires: account, characters, progression, inventories, and builds"
+    )
+    async def api_key(self, interaction, gw2_api_key: str, primary: bool = True):
+        await self.process_key(interaction=interaction, gw2_api_key=gw2_api_key, primary=primary)
 
 
 async def setup(bot):
