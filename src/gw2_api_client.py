@@ -117,10 +117,12 @@ class GW2ApiClient:
 
     def achievements(self, *args, **kwargs):
         ids = kwargs.get('ids', None)
-        ping_url = self.url + "/achievements"
+        name = kwargs.get('name', None)
+        ping_url = self.url + "/account/achievements"
         if ids:
             ping_url += f"?ids={ids}"
-        response = requests.get(ping_url, headers=self.headers)
+        elif name:
+            ping_url += f"?ids={self.api_achievements_map[name]}"
 
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
