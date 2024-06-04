@@ -117,12 +117,10 @@ class GW2ApiClient:
 
     def achievements(self, *args, **kwargs):
         ids = kwargs.get('ids', None)
-        name = kwargs.get('name', None)
-        ping_url = self.url + "/account/achievements"
+        ping_url = self.url + "/achievements"
         if ids:
             ping_url += f"?ids={ids}"
-        elif name:
-            ping_url += f"?ids={self.api_achievements_map[name]}"
+        response = requests.get(ping_url, headers=self.headers)
 
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
@@ -190,7 +188,12 @@ class GW2ApiClient:
         if response.status_code == 200:
             return json.loads(response.text)
         else:
-            print(f"Request failed with status code {response.status_code}")
+            ping_url += f"&access_token={self.api_key}"
+            response = requests.get(ping_url)
+            if response.status_code == 200:
+                return json.loads(response.text)
+            else:
+                print(f"Request failed with status code {response.status_code}")
 
     def wvw_matches(self):
         account = self.account()
