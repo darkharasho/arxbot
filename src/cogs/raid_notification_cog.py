@@ -9,6 +9,7 @@ from src import helpers
 from src import authorization
 from tabulate import tabulate
 from src.gw2_api_client import GW2ApiClient
+from src.models.member import Member
 tabulate.PRESERVE_WHITESPACE = True
 
 
@@ -25,27 +26,38 @@ class RaidNotificationCog(commands.Cog):
         app_commands.Choice(name='⚔️ 🟢 Green Alpine Borderlands', value='Green Alpine Borderlands'),
         app_commands.Choice(name='⚔️ 🔵 Blue Alpine Borderlands', value='Blue Alpine Borderlands'),
         app_commands.Choice(name='⚔️ 🔴 Red Desert Borderlands', value='Red Desert Borderlands')
-    ], raid_type=[
-        app_commands.Choice(name="🔒 Closed Tag", value="closed_raid"),
-        app_commands.Choice(name="🔓 Open Tag", value="open_raid"),
     ])
-    async def raid_notification(self, interaction, wvw_map: str, raid_type: str, ping: discord.Role):
-        return
+    async def raid_notification(self, interaction, wvw_map: str, channel: discord.TextChannel, role_pings: str):
         await interaction.response.defer(ephemeral=True)
 
-        gw2_api_client = GW2ApiClient()
+        role_ids = [int(role_id.strip("<@&>")) for role_id in role_pings.split()]
+        roles = [interaction.guild.get_role(role_id) for role_id in role_ids if interaction.guild.get_role(role_id)]
+        member = Member.select().where(Member.discord_id == interaction.user.id).first()
+
+        if member is None:
+            embed = discord.Embed(
+                title="Failed to Post Notification",
+                description=f"No API key found for your user",
+                color=0xff0000
+            )
+            await interaction.followup.send(embed=embed)
+            return
+        elif member.api_key is None:
+            embed = discord.Embed(
+                title="Failed to Post Notification",
+                description=f"No API key found for your user",
+                color=0xff0000
+            )
+            await interaction.followup.send(embed=embed)
+            return
+
+        gw2_api_client = GW2ApiClient(api_key=member.api_key)
         wvw_maps = gw2_api_client.wvw_maps()
         wvw_matches = gw2_api_client.wvw_matches()
 
         ping_body = ""
-        pdb.set_trace()
-        for role_id in Config.raid_notification(nested_cfg=["role_ids"]):
-            role = interaction.guild.get_role(role_id)
+        for role in roles:
             ping_body += f"{role.mention} "
-        if raid_type == "open_raid":
-            for role_id in Config.raid_notification(nested_cfg=["open_tag_role_ids"]):
-                role = interaction.guild.get_role(role_id)
-                ping_body += f"{role.mention} "
 
         if "Eternal" in wvw_map:
             banner_file_name = helpers.select_icon("Eternal_Battlegrounds_loading_screen", file_type="jpg")
@@ -111,15 +123,13 @@ class RaidNotificationCog(commands.Cog):
         body += f"### Scores\n```{table}```"
 
         raid_embed = discord.Embed(title="", description=body, color=color)
-        raid_embed.set_author(name=settings.GUILD, icon_url=interaction.guild.icon.url)
+        raid_embed.set_author(name=interaction.guild.name, icon_url=interaction.guild.icon.url)
 
         banner_file = discord.File(banner_file_name)
         raid_embed.set_image(url=f"attachment://{banner_file.filename}")
 
         thumbnail_file = discord.File(thumbnail_file_name)
         raid_embed.set_thumbnail(url=f"attachment://{thumbnail_file.filename}")
-
-        channel = bot.get_channel(Config.raid_notification()[f"{raid_type}_channel_id"])
 
         try:
             await channel.send(ping_body, embed=raid_embed, files=[thumbnail_file, banner_file])
