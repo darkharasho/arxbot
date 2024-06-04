@@ -61,7 +61,8 @@ class StatUpdaterTask(commands.Cog):
         kills = 0
         for api_key in member.api_keys:
             avenger_stats = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Realm Avenger")
-            kills += avenger_stats[0]["current"]
+            if avenger_stats:
+                kills += avenger_stats[0]["current"]
         await self.update(member=member, stat_name="kills", stat=kills)
 
     async def update_capture_count(self, member):
@@ -69,7 +70,8 @@ class StatUpdaterTask(commands.Cog):
         captures = 0
         for api_key in member.api_keys:
             conqueror = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Emblem of the Conqueror")
-            captures += conqueror[0]["current"] + (conqueror[0].get("repeated", 0) * 100)
+            if conqueror:
+                captures += conqueror[0]["current"] + (conqueror[0].get("repeated", 0) * 100)
         await self.update(member=member, stat_name="captures", stat=captures)
 
     async def update_rank_count(self, member):
@@ -77,7 +79,8 @@ class StatUpdaterTask(commands.Cog):
         wvw_ranks = 0
         for api_key in member.api_keys:
             account = await GW2ApiClient(api_key=api_key.value).aio_account()
-            wvw_ranks += account["wvw_rank"]
+            if account:
+                wvw_ranks += account["wvw_rank"]
         await self.update(member=member, stat_name="wvw_ranks", stat=wvw_ranks)
 
     async def update_deaths_count(self, member):
@@ -85,8 +88,9 @@ class StatUpdaterTask(commands.Cog):
         deaths = 0
         for api_key in member.api_keys:
             characters = await GW2ApiClient(api_key=api_key.value).aio_characters(ids="all")
-            for character in characters:
-                deaths += character["deaths"]
+            if characters:
+                for character in characters:
+                    deaths += character["deaths"]
         await self.update(member=member, stat_name="deaths", stat=deaths)
 
     async def update_supply_spent(self, member):
@@ -94,7 +98,8 @@ class StatUpdaterTask(commands.Cog):
         supply = 0
         for api_key in member.api_keys:
             repair_master = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Repair Master")
-            supply += repair_master[0]["current"]
+            if repair_master:
+                supply += repair_master[0]["current"]
         await self.update(member=member, stat_name="supply", stat=supply)
 
     async def update_yaks_escorted(self, member):
@@ -102,7 +107,8 @@ class StatUpdaterTask(commands.Cog):
         yaks = 0
         for api_key in member.api_keys:
             yak_escorts = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="A Pack Dolyak's Best Friend")
-            yaks += yak_escorts[0]["current"]
+            if yak_escorts:
+                yaks += yak_escorts[0]["current"]
         await self.update(member=member, stat_name="yaks", stat=yaks)
 
     @staticmethod
