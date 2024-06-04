@@ -14,13 +14,18 @@ from src.gw2_api_client import GW2ApiClient
 class Member(BaseModel):
     username = CharField(unique=True)
     guild_id = ForeignKeyField(Guild, backref="members")
-    discord_id = IntegerField(unique=True)
+    discord_id = IntegerField()
     user_id = IntegerField(null=True)
     gw2_api_key = CharField(null=True)
     gw2_stats = JSONField(null=True)
     gw2_username = CharField(null=True)
     created_at = DateTimeField()
     updated_at = DateTimeField(null=True)
+
+    class Meta:
+        indexes = (
+            (('guild_id', 'discord_id'), True),  # Composite unique index
+        )
 
     @property
     def api_key(self):
