@@ -39,6 +39,14 @@ class Config(BaseModel):
             return []
 
     @classmethod
+    def clean_channel(cls, guild_id=int):
+        value = cls.select().where((cls.name == "clean_channel") & (Config.guild_id == guild_id)).first()
+        if value:
+            return value.get_value()
+        else:
+            return {}
+
+    @classmethod
     def create_or_update(cls, name=str, value=None, guild=discord.Guild):
         config = cls.select().where((cls.name == name) & (cls.guild_id == guild.id)).first()
         value_type = type(value).__name__

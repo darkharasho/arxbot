@@ -177,7 +177,7 @@ class SetMultiConfigView(discord.ui.View):
                                   color=0xffcc4d)
             msg = await self.channel.send(embed=embed, view=self)
 
-            response = await bot.wait_for(
+            response = await self.bot.wait_for(
                 "interaction",
                 check=lambda inter: inter.user == self.user and inter.channel == self.channel
             )
