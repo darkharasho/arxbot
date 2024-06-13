@@ -22,6 +22,8 @@ class CleanChannelTask(commands.Cog):
     async def delete_messages(self):
         for guild in self.bot.guilds:
             clean_channel_config = Config.clean_channel(guild_id=guild.id)
+            if not clean_channel_config:
+                continue
             if not clean_channel_config["enabled"]:
                 continue
 
