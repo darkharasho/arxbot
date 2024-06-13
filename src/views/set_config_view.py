@@ -25,6 +25,10 @@ options = [
                  value="TmpVCVisibility",
                  description="Role allowed to see temporary voice channels, but not connect",
                  emoji="🎙️"),
+    SelectOption(label="Clean Channel",
+                 value="CleanChannel",
+                 description="Deletes messages older than 1 week in a set channel",
+                 emoji="🧼"),
     SelectOption(label="Guild Verification",
                  value="GuildVerification",
                  description="Guild roles to assign to members who have added an API Key",
@@ -68,6 +72,26 @@ class SetConfigView(discord.ui.View):
                                                  options=tmp_vc_options,
                                                  min_values=0,
                                                  max_values=len(tmp_vc_options)))
+        elif selected_option == "CleanChannel":
+            answer_key = ['channel_id', 'enabled']
+            answers = {}
+            for index, question in enumerate(settings.SET_CLEAN_CHANNEL, start=0):
+                question_view = set_multi_config_view.SetMultiConfigView(config_name=selected_option,
+                                                                         question=question,
+                                                                         channel=interaction.channel,
+                                                                         guild=self.guild,
+                                                                         bot=self.bot,
+                                                                         user=interaction.user)
+                answer = await question_view.send_question(index)
+                answers[answer_key[index]] = answer
+                if answer == "APPLICATION_CANCEL":
+                    break
+
+            self.clear_items()
+            await self.handle_multi_question_response(name="clean_channel", answers=answers,
+                                                      description="```Clean Channel:\nDelete messages > 1 week.```",
+                                                      guild=self.guild)
+
         elif selected_option == "GuildVerification":
             answer_key = ["gw2_to_discord_mapping", "allowed_roles", "additional_roles"]
             answers = {}

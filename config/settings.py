@@ -46,6 +46,20 @@ SET_VERIFICATION = [
     }
 ]
 
+SET_CLEAN_CHANNEL = [
+    {
+        "text": "# Clean Channel:\nDeletes messages older than 1 week in a set channel. Helpful for bot channels like dps logs or updates.",
+        "field_type": "input",
+        "response_type": "text_channel"
+    },
+    {
+        "text": "# Enabled?",
+        "field_type": "select",
+        "options": [True, False],
+        "response_type": bool
+    }
+]
+
 SERVER_NAMES = [
     {"id": 1001, "name": "Anvil Rock", "abbreviation": "AR"},
     {"id": 1002, "name": "Borlis Pass", "abbreviation": "BP"},
