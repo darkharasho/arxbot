@@ -1,3 +1,5 @@
+import pdb
+
 import discord
 import requests
 from datetime import datetime, timedelta, timezone
@@ -5,6 +7,7 @@ from discord.ext import commands, tasks
 from config import settings
 from src.lib.logger import logger
 from src.models.config import Config
+from src import helpers
 
 
 class CleanChannelTask(commands.Cog):
@@ -24,7 +27,7 @@ class CleanChannelTask(commands.Cog):
             clean_channel_config = Config.clean_channel(guild_id=guild.id)
             if not clean_channel_config:
                 continue
-            if not clean_channel_config["enabled"]:
+            if not helpers.str_to_bool(clean_channel_config["enabled"]):
                 continue
 
             channel = self.bot.get_channel(clean_channel_config['channel_id'])
