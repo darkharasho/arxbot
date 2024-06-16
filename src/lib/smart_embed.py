@@ -51,6 +51,8 @@ class SmartEmbed:
 
     def create_embeds(self):
         current_embed = discord.Embed(title=self.title, description=self.description, color=self.color)
+        total_length = len(self.title) + len(self.description)
+
         for name, value, value_type, inline in self.fields:
             if len(value) > self.max_field_length:
                 max_chunk_size = self.max_field_length - 6  # Account for code block markers
@@ -59,17 +61,22 @@ class SmartEmbed:
                 for i, chunk in enumerate(chunks):
                     chunk_value = f"```json\n{chunk}\n```" if value_type == "dict" else chunk
                     if i == 0:
-                        current_embed.add_field(name=name, value=chunk_value, inline=inline)
+                        field_name = name
                     else:
-                        if len(current_embed.fields) == 25:
-                            self.embeds.append(current_embed)
-                            current_embed = discord.Embed(color=self.color)
-                        current_embed.add_field(name=f"{name} (cont.)", value=chunk_value, inline=inline)
+                        field_name = f"{name} (cont.)"
+                    if len(current_embed.fields) == 25 or total_length + len(chunk_value) > 6000:
+                        self.embeds.append(current_embed)
+                        current_embed = discord.Embed(color=self.color)
+                        total_length = 0
+                    current_embed.add_field(name=field_name, value=chunk_value, inline=inline)
+                    total_length += len(field_name) + len(chunk_value)
             else:
-                if len(current_embed.fields) == 25:
+                if len(current_embed.fields) == 25 or total_length + len(value) > 6000:
                     self.embeds.append(current_embed)
                     current_embed = discord.Embed(color=self.color)
+                    total_length = 0
                 current_embed.add_field(name=name, value=value, inline=inline)
+                total_length += len(name) + len(value)
 
         self.embeds.append(current_embed)
         return self.embeds
