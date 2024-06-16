@@ -31,6 +31,7 @@ class StatUpdaterTask(commands.Cog):
             "deaths": False,
             "supply": False,
             "yaks": False,
+            "spikes": False
         }
 
         for index, member in enumerate(members, start=1):
@@ -48,6 +49,8 @@ class StatUpdaterTask(commands.Cog):
                 progress["supply"] = True
                 await self.update_yaks_escorted(member)
                 progress["yaks"] = True
+                await self.update_spikes(member)
+                progress["spikes"] = True
                 print(f"[GW2 SYNC]".ljust(20) + f"🟢 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
             except Exception as e:
                 print(f"[GW2 SYNC]".ljust(20) + f"🔴 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
@@ -111,23 +114,40 @@ class StatUpdaterTask(commands.Cog):
                 yaks += yak_escorts[0]["current"]
         await self.update(member=member, stat_name="yaks", stat=yaks)
 
-    @staticmethod
-    async def update(member=Member, stat_name=None, stat=None):
-        if member.gw2_stats and member.gw2_stats.get(stat_name, None):
-            stats = member.gw2_stats
-            stats[stat_name]["this_week"] = stat
+    async def update_spikes(self, member):
+        member = Member.get(Member.id == member.id)
+        count = 0
+        legendary_spike_id = 81296
+        for api_key in member.api_keys:
+            items = api_key.api_client().bank()
 
-            # Check if it's reset to update "last_week" data
-            current_time_utc = datetime.datetime.utcnow()
-            current_time_utc_minus_7 = current_time_utc - datetime.timedelta(hours=7)
-            if current_time_utc_minus_7.weekday() == 4 and current_time_utc_minus_7.hour == 17:
-                stats[stat_name]["last_week"] = stat
+            if items:
+                for item in items:
+                    if item["id"] == legendary_spike_id:
+                        count += item["count"]
+        await self.update(member=member, stat_name="legendary_spikes", stat=count, single_mode=True)
+
+    @staticmethod
+    async def update(member=Member, stat_name=None, stat=None, single_mode=False):
+        if single_mode:
+            stats = member.gw2_stats
+            stats[stat_name] = stat
         else:
-            stats = member.gw2_stats or {}
-            stats[stat_name] = {
-                "last_week": stat,
-                "this_week": stat
-            }
+            if member.gw2_stats and member.gw2_stats.get(stat_name, None):
+                stats = member.gw2_stats
+                stats[stat_name]["this_week"] = stat
+
+                # Check if it's reset to update "last_week" data
+                current_time_utc = datetime.datetime.utcnow()
+                current_time_utc_minus_7 = current_time_utc - datetime.timedelta(hours=7)
+                if current_time_utc_minus_7.weekday() == 4 and current_time_utc_minus_7.hour == 17:
+                    stats[stat_name]["last_week"] = stat
+            else:
+                stats = member.gw2_stats or {}
+                stats[stat_name] = {
+                    "last_week": stat,
+                    "this_week": stat
+                }
         try:
             Member.update(gw2_stats=stats, updated_at=datetime.datetime.now()).where(Member.id == member.id).execute()
         except:
