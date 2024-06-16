@@ -128,3 +128,11 @@ def calculate_kd(kills: int, deaths: int):
         return kills
     kd_float = kills / deaths
     return float("%.2f" % kd_float)
+
+def str_to_bool(s):
+    if s.lower() == 'true':
+        return True
+    elif s.lower() == 'false':
+        return False
+    else:
+        raise ValueError(f"Cannot convert {s} to boolean.")
