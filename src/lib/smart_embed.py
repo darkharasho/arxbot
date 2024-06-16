@@ -37,14 +37,30 @@ class SmartEmbed:
                 max_chunk_size = self.max_field_length - 6
                 chunks = self.split_string_into_chunks(value_str, max_chunk_size)
                 for i, chunk in enumerate(chunks):
-                    chunk_value = f"```json\n{chunk}```" if i == 0 else chunk
+                    chunk_value = f"```json\n{chunk}```"
                     self.fields.append((name if i == 0 else f"{name} (cont.)", chunk_value, "dict", inline))
             else:
                 value_str = f"```json\n{value_str}```"
                 self.fields.append((name, value_str, "dict", inline))
 
     def split_string_into_chunks(self, text, max_chunk_size):
-        return [text[i:i + max_chunk_size] for i in range(0, len(text), max_chunk_size)]
+        """Splits a long string into chunks of max_chunk_size characters."""
+        chunks = []
+        current_chunk = ""
+
+        for line in text.split('\n'):
+            if len(current_chunk) + len(line) + 1 > max_chunk_size:
+                chunks.append(current_chunk)
+                current_chunk = line
+            else:
+                if current_chunk:
+                    current_chunk += '\n'
+                current_chunk += line
+
+        if current_chunk:
+            chunks.append(current_chunk)
+
+        return chunks
 
     def create_embeds(self):
         current_embed = discord.Embed(title=self.title, description=self.description, color=self.color)
@@ -52,11 +68,11 @@ class SmartEmbed:
 
         for name, value, value_type, inline in self.fields:
             if len(value) > self.max_field_length:
-                max_chunk_size = self.max_field_length - 6
-                value = value[7:-3]
+                max_chunk_size = self.max_field_length - 6  # Account for code block markers
+                value = value[7:-3]  # Remove existing code block markers for proper splitting
                 chunks = self.split_string_into_chunks(value, max_chunk_size)
                 for i, chunk in enumerate(chunks):
-                    chunk_value = f"```json\n{chunk}\n```" if value_type == "dict" else chunk
+                    chunk_value = f"```json\n{chunk}\n```"
                     if len(chunk_value) > 1024:
                         raise ValueError(f"Chunk is too large: {len(chunk_value)} characters")
                     field_name = name if i == 0 else f"{name} (cont.)"
