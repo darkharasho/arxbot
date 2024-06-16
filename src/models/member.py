@@ -97,7 +97,10 @@ class Member(BaseModel):
             return ""
 
     def legendary_spikes(self):
-        return self.gw2_stats["legendary_spikes"]
+        try:
+            return self.gw2_stats["legendary_spikes"]
+        except:
+            return 0
 
     def gifts_of_battle(self):
         items = GW2ApiClient(api_key=self.api_key).bank()
