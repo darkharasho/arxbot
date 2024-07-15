@@ -38,6 +38,14 @@ class Member(BaseModel):
         else:
             return None
 
+    def api_key_is_leaderboard_enabled(self):
+        from src.models.api_key import ApiKey
+        ak = self.api_keys.where(ApiKey.primary == True).first()
+        if ak:
+            return ak.leaderboard_enabled
+        else:
+            return None
+
     def list_gw2_api_keys(self):
         return [api_key.value for api_key in self.api_keys]
 
