@@ -20,7 +20,8 @@ class CleanChannelTask(commands.Cog):
 
     @tasks.loop(hours=24)
     async def clean_channel(self):
-        await self.delete_messages()
+        return
+        # await self.delete_messages()
 
     async def delete_messages(self):
         for guild in self.bot.guilds:

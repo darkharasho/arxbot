@@ -32,17 +32,17 @@ class AddKeyCog(commands.Cog):
         response = await interaction.followup.send(embed=embed, ephemeral=True)
         db_member = Member.find_or_create(member=interaction.user, guild=interaction.guild)
         api_client = GW2ApiClient(api_key=gw2_api_key)
-        api_checks = []
+        api_checks = {}
         api_checks_display = []
         try:
             if not api_client.account():
                 raise
-            api_checks.append(True)
+            api_checks["account"] = True
             api_checks_display.append("✅ Account")
             embed.set_field_at(index=1, name="✅ Account", value="", inline=True)
             await response.edit(embed=embed)
         except:
-            api_checks.append(False)
+            api_checks["account"] = False
             api_checks_display.append("❌ Account")
             embed.set_field_at(index=1, name="❌ Account", value="", inline=True)
             await response.edit(embed=embed)
@@ -50,55 +50,55 @@ class AddKeyCog(commands.Cog):
         try:
             if not api_client.account_achievements():
                 raise
-            api_checks.append(True)
+            api_checks["account_achievements"] = True
             api_checks_display.append("✅ Progression")
             embed.set_field_at(index=2, name="✅ Progression", value="", inline=True)
             await response.edit(embed=embed)
         except:
-            api_checks.append(False)
-            api_checks_display.append("❌ Progression")
-            embed.set_field_at(index=2, name="❌ Progression", value="", inline=True)
+            api_checks["account_achievements"] = False
+            api_checks_display.append("⚠️ Progression")
+            embed.set_field_at(index=2, name="⚠️ Progression", value="", inline=True)
             await response.edit(embed=embed)
 
         try:
             if not api_client.characters():
                 raise
-            api_checks.append(True)
+            api_checks["characters"] = True
             api_checks_display.append("✅ Characters")
             embed.set_field_at(index=3, name="✅ Characters", value="", inline=True)
             await response.edit(embed=embed)
         except:
-            api_checks.append(False)
-            api_checks_display.append("❌ Characters")
-            embed.set_field_at(index=3, name="❌ Characters", value="", inline=True)
+            api_checks["characters"] = False
+            api_checks_display.append("⚠️ Characters")
+            embed.set_field_at(index=3, name="⚠️ Characters", value="", inline=True)
             await response.edit(embed=embed)
 
         try:
             if not api_client.builds(index=0, tabs="all"):
                 raise
-            api_checks.append(True)
+            api_checks["builds"] = True
             api_checks_display.append("✅ Builds")
             embed.set_field_at(index=4, name="✅ Builds", value="", inline=True)
             await response.edit(embed=embed)
         except:
-            api_checks.append(False)
-            api_checks_display.append("❌ Builds")
-            embed.set_field_at(index=4, name="❌ Builds", value="", inline=True)
+            api_checks["builds"] = False
+            api_checks_display.append("⚠️ Builds")
+            embed.set_field_at(index=4, name="⚠️ Builds", value="", inline=True)
             await response.edit(embed=embed)
         try:
             if not api_client.bank():
                 raise
-            api_checks.append(True)
+            api_checks["bank"] = True
             api_checks_display.append("✅ Inventories")
             embed.set_field_at(index=5, name="✅ Inventories", value="", inline=True)
             await response.edit(embed=embed)
         except:
-            api_checks.append(False)
-            api_checks_display.append("❌ Inventories")
-            embed.set_field_at(index=5, name="❌ Inventories", value="", inline=True)
+            api_checks["bank"] = False
+            api_checks_display.append("⚠️ Inventories")
+            embed.set_field_at(index=5, name="⚠️ Inventories", value="", inline=True)
             await response.edit(embed=embed)
 
-        if all(api_checks):
+        if api_checks["account"]:
             other_keys = db_member.api_keys
             name = GW2ApiClient(api_key=gw2_api_key).account()["name"]
             embed.title = "Validating API Key..."
@@ -139,7 +139,8 @@ class AddKeyCog(commands.Cog):
             await response.edit(embed=embed)
 
             try:
-                api_key = ApiKey.create(member=db_member, name=name, value=gw2_api_key, primary=primary, guild_id=interaction.guild.id)
+                full_key = all(api_checks.values())
+                api_key = ApiKey.create(member=db_member, name=name, value=gw2_api_key, primary=primary, leaderboard_enabled=full_key, guild_id=interaction.guild.id)
                 if primary and other_keys:
                     for other_key in other_keys:
                         if other_key == api_key:
@@ -147,30 +148,31 @@ class AddKeyCog(commands.Cog):
                         else:
                             other_key.primary = False
                             other_key.save()
-                embed.title = "Syncing Guild Wars 2 Data..."
-                embed.clear_fields()
-                for item in ["🔃 Syncing Kill Count...", "🔃 Syncing Capture Count...", "🔃 Syncing Rank Count...", "🔃 Syncing Death Count...", "🔃 Syncing Repair Count...", "🔃 Syncing Yak Count..."]:
-                    embed.add_field(name=item, value="", inline=False)
-                await response.edit(embed=embed)
-                suc = StatUpdaterTask(self.bot, api_key=gw2_api_key)
-                await suc.update_kill_count(db_member)
-                embed.set_field_at(index=0, name="✅ Kill Count Synced", value="", inline=False)
-                await response.edit(embed=embed)
-                await suc.update_capture_count(db_member)
-                embed.set_field_at(index=1, name="✅ Capture Count Synced", value="", inline=False)
-                await response.edit(embed=embed)
-                await suc.update_rank_count(db_member)
-                embed.set_field_at(index=2, name="✅ Rank Count Synced", value="", inline=False)
-                await response.edit(embed=embed)
-                await suc.update_deaths_count(db_member)
-                embed.set_field_at(index=3, name="✅ Death Count Synced", value="", inline=False)
-                await response.edit(embed=embed)
-                await suc.update_supply_spent(db_member)
-                embed.set_field_at(index=4, name="✅ Supply Count Synced", value="", inline=False)
-                await response.edit(embed=embed)
-                await suc.update_yaks_escorted(db_member)
-                embed.set_field_at(index=5, name="✅ Yak Count Synced", value="", inline=False)
-                await response.edit(embed=embed)
+                if full_key:
+                    embed.title = "Syncing Guild Wars 2 Data..."
+                    embed.clear_fields()
+                    for item in ["🔃 Syncing Kill Count...", "🔃 Syncing Capture Count...", "🔃 Syncing Rank Count...", "🔃 Syncing Death Count...", "🔃 Syncing Repair Count...", "🔃 Syncing Yak Count..."]:
+                        embed.add_field(name=item, value="", inline=False)
+                    await response.edit(embed=embed)
+                    suc = StatUpdaterTask(self.bot, api_key=gw2_api_key)
+                    await suc.update_kill_count(db_member)
+                    embed.set_field_at(index=0, name="✅ Kill Count Synced", value="", inline=False)
+                    await response.edit(embed=embed)
+                    await suc.update_capture_count(db_member)
+                    embed.set_field_at(index=1, name="✅ Capture Count Synced", value="", inline=False)
+                    await response.edit(embed=embed)
+                    await suc.update_rank_count(db_member)
+                    embed.set_field_at(index=2, name="✅ Rank Count Synced", value="", inline=False)
+                    await response.edit(embed=embed)
+                    await suc.update_deaths_count(db_member)
+                    embed.set_field_at(index=3, name="✅ Death Count Synced", value="", inline=False)
+                    await response.edit(embed=embed)
+                    await suc.update_supply_spent(db_member)
+                    embed.set_field_at(index=4, name="✅ Supply Count Synced", value="", inline=False)
+                    await response.edit(embed=embed)
+                    await suc.update_yaks_escorted(db_member)
+                    embed.set_field_at(index=5, name="✅ Yak Count Synced", value="", inline=False)
+                    await response.edit(embed=embed)
 
                 embed = discord.Embed(
                     title="Guild Wars 2 API Key",

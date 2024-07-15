@@ -15,6 +15,7 @@ class ApiKey(BaseModel):
     name = TextField(null=False, default="Default")
     primary = BooleanField(default=True)
     guild_id = ForeignKeyField(Guild, null=True, backref="api_keys")
+    leaderboard_enabled = BooleanField(default=True)
 
     def account_id(self):
         return GW2ApiClient(api_key=self.value).account()["id"]
@@ -23,7 +24,7 @@ class ApiKey(BaseModel):
         return GW2ApiClient(api_key=self.value)
 
     @staticmethod
-    def find_or_create(member=discord.Member, value=None, primary=None, guild_id=None):
+    def find_or_create(member=discord.Member, value=None, primary=None, leaderboard_enabled=None, guild_id=None):
         api_key = ApiKey.select().where((ApiKey.member == member) & (ApiKey.value == value)).first()
         if api_key:
             return api_key
@@ -32,6 +33,7 @@ class ApiKey(BaseModel):
                 member=member,
                 name=GW2ApiClient(api_key=value).account()["name"],
                 value=value,
+                leaderboard_enabled=leaderboard_enabled,
                 guild_id=guild_id,
                 primary=primary
             )
