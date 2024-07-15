@@ -2,6 +2,7 @@ config/config.json
 *.db
 logfile.txt
 arxbot.log
+*.db-journal
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
