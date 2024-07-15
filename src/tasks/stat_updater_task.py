@@ -23,7 +23,7 @@ class StatUpdaterTask(commands.Cog):
 
     async def bulk_update(self):
         print("[GW2 SYNC]".ljust(20) + f"🟢 STARTED")
-        members = list(set([api_key.member for api_key in ApiKey.select()]))
+        members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.leaderboard_enabled == True)]))
         progress = {
             "kills": False,
             "captures": False,
