@@ -207,14 +207,14 @@ class AddKeyCog(commands.Cog):
 
     @app_commands.command(
         name="add-key",
-        description="Add an API Key. Requires: account, characters, progression, inventories, and builds"
+        description="Add an API Key. Requires: account, Optional: characters, progression, inventories, and builds"
     )
     async def add_key(self, interaction, gw2_api_key: str, primary: bool = True):
         await self.process_key(interaction=interaction, gw2_api_key=gw2_api_key, primary=primary)
 
     @app_commands.command(
         name="api-key",
-        description="(Alias for /add-key) Requires: account, characters, progression, inventories, and builds"
+        description="(Alias for /add-key) Requires: account, Optional: characters, progression, inventories, and builds"
     )
     async def api_key(self, interaction, gw2_api_key: str, primary: bool = True):
         await self.process_key(interaction=interaction, gw2_api_key=gw2_api_key, primary=primary)
