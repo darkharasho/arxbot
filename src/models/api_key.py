@@ -25,7 +25,7 @@ class ApiKey(BaseModel):
 
     @staticmethod
     def find_or_create(member=discord.Member, value=None, primary=None, leaderboard_enabled=None, guild_id=None):
-        api_key = ApiKey.select().where((ApiKey.member == member) & (ApiKey.value == value)).first()
+        api_key = ApiKey.select().where((ApiKey.member == member) & (ApiKey.value == value)  & (ApiKey.guild_id == guild_id)).first()
         if api_key:
             return api_key
         else:
