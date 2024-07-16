@@ -106,24 +106,25 @@ class AddKeyCog(commands.Cog):
             embed.add_field(name="🔃 Checking Guild Wars 2 accounts...", value="")
             embed.add_field(name="🔃 Checking primary key status...", value="")
             await response.edit(embed=embed)
-            for other_key in other_keys:
-                if api_client.account()["id"] == other_key.account_id():
-                    embed = discord.Embed(
-                        title="Guild Wars 2 API Key - Account already Registered",
-                        description="If you'd like to change your API key, remove the other one first wtih `/remove-key`",
-                        color=0xff0000)
-                    embed.add_field(
-                        name="Proposed GW2 API Key",
-                        value=f"```\n{name}\n\n{gw2_api_key}```",
-                        inline=False
-                    )
-                    embed.add_field(
-                        name="Current GW2 API Key",
-                        value=f"```\n{other_key.name}\n\n{other_key.value}```",
-                        inline=False
-                    )
-                    await response.edit(embed=embed)
-                    return
+            if other_keys:
+                for other_key in other_keys:
+                    if api_client.account()["id"] == other_key.account_id():
+                        embed = discord.Embed(
+                            title="Guild Wars 2 API Key - Account already Registered",
+                            description="If you'd like to change your API key, remove the other one first wtih `/remove-key`",
+                            color=0xff0000)
+                        embed.add_field(
+                            name="Proposed GW2 API Key",
+                            value=f"```\n{name}\n\n{gw2_api_key}```",
+                            inline=False
+                        )
+                        embed.add_field(
+                            name="Current GW2 API Key",
+                            value=f"```\n{other_key.name}\n\n{other_key.value}```",
+                            inline=False
+                        )
+                        await response.edit(embed=embed)
+                        return
             embed.set_field_at(index=0, name="✅ Guild Wars 2 accounts verified", value="")
             await response.edit(embed=embed)
 
