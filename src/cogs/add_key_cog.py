@@ -108,6 +108,8 @@ class AddKeyCog(commands.Cog):
             await response.edit(embed=embed)
             if other_keys:
                 for other_key in other_keys:
+                    print(other_key)
+                    print(other_key.value)
                     if api_client.account()["id"] == other_key.account_id():
                         embed = discord.Embed(
                             title="Guild Wars 2 API Key - Account already Registered",
