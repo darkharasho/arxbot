@@ -61,7 +61,7 @@ class RemoveKeyCog(commands.Cog):
         if type(event) == discord.Interaction:
             await event.response.defer()
             embed = discord.Embed(title="Remove API Key", description="")
-            member = Member.select().where(Member.discord_id == interaction.user.id) & (Member.guild_id == interaction.guild.id)).first()
+            member = Member.select().where((Member.discord_id == interaction.user.id) & (Member.guild_id == interaction.guild.id)).first()
             api_key = ApiKey.select().where((ApiKey.id == event.data['values'][0]) & (ApiKey.guild_id == interaction.guild.id)).first()
             was_primary = api_key.primary
             if api_key.member == member:
