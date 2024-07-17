@@ -14,7 +14,7 @@ tabulate.PRESERVE_WHITESPACE = True
 
 
 async def calculate_leaderboard(name, data, guild):
-    members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.guild_id == guild.id)]))
+    members = list(set([api_key.member for api_key in ApiKey.select().where((ApiKey.guild_id == guild_id) & (ApiKey.leaderboard_enabled == True))]))
     leaderboard = []
     for member in members:
         leaderboard.append([member.username, member.gw2_name(), getattr(member, data)()])
