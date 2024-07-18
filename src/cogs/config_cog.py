@@ -45,7 +45,7 @@ class ConfigCog(commands.Cog):
                 await dm_channel.send(embed=embed)
             elif option == 'show':
                 embed = self.show(interaction.guild)
-                await dm_channel.send(embed=embed)
+                await dm_channel.send(embeds=embed.create_embeds())
 
     @staticmethod
     async def set_config(interaction, bot):
