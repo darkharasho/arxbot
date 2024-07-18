@@ -9,6 +9,8 @@ from src import authorization
 from src.views import set_config_view
 from peewee import *
 from src.models.config import Config
+from src.lib.smart_embed import SmartEmbed
+
 
 class ConfigCog(commands.Cog):
     def __init__(self, bot):
@@ -110,8 +112,7 @@ class ConfigCog(commands.Cog):
         tablefmt = "simple"
         headers = ["Config Name", "Config Value"]
         table = tabulate(table_data, headers, tablefmt=tablefmt, maxcolwidths=[None, 25])
-
-        embed = discord.Embed(title="⚠️ Show Config", description=f"```{table}```", color=0xffcc4d)
+        embed = SmartEmbed(title="⚠️ Show Config", description=f"```{table}```", color=0xffcc4d)
 
         return embed
 
