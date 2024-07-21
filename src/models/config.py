@@ -47,6 +47,32 @@ class Config(BaseModel):
             return {}
 
     @classmethod
+    def arcdps_updates(cls, guild_id=int, nested_cfg=None):
+        if not nested_cfg:
+            nested_cfg = []
+        value = cls.select().where((cls.name == "arcdps_updates") & (cls.guild_id == guild_id)).first()
+        if value:
+            if nested_cfg:
+                current_dict = value.get_value()
+
+                # Traverse the dictionary using the keys
+                for key in nested_cfg:
+                    if key in current_dict:
+                        current_dict = current_dict[key]
+                    else:
+                        # Handle the case where a key is not found
+                        print(f"Key '{key}' not found.")
+                        break
+                if current_dict in ["True", "true", "False", "false"]:
+                    return eval(current_dict.title())
+                else:
+                    return current_dict
+            else:
+                return value.get_value()
+        else:
+            return {}
+
+    @classmethod
     def create_or_update(cls, name=str, value=None, guild=discord.Guild):
         config = cls.select().where((cls.name == name) & (cls.guild_id == guild.id)).first()
         value_type = type(value).__name__

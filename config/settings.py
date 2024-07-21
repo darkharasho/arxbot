@@ -60,6 +60,20 @@ SET_CLEAN_CHANNEL = [
     }
 ]
 
+SET_ARCDPS_UPDATES = [
+    {
+        "text": "# Enabled?",
+        "field_type": "select",
+        "options": [True, False],
+        "response_type": bool
+    },
+    {
+        "text": "# Channel to post the updates in",
+        "field_type": "input",
+        "response_type": "text_channel"
+    }
+]
+
 SERVER_NAMES = [
     {"id": 1001, "name": "Anvil Rock", "abbreviation": "AR"},
     {"id": 1002, "name": "Borlis Pass", "abbreviation": "BP"},

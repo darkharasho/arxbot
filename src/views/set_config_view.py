@@ -32,7 +32,11 @@ options = [
     SelectOption(label="Guild Verification",
                  value="GuildVerification",
                  description="Guild roles to assign to members who have added an API Key",
-                 emoji="🛡️")
+                 emoji="🛡️"),
+    SelectOption(label="Setup ArcDPS Updates",
+                 value="ArcdpsUpdates",
+                 description="Sets up automatic notifications for ArcDPS updates",
+                 emoji="🧮"),
 ]
 
 
@@ -140,6 +144,27 @@ class SetConfigView(discord.ui.View):
             await self.handle_multi_question_response(name="guild_verification", answers=answers,
                                                       description="```Guild Verification:\nAuto role on gw2 guild verify.```",
                                                       guild=self.guild)
+        elif selected_option == "ArcdpsUpdates":
+            answer_key = ["enabled", "channel_id"]
+            answers = {}
+            for index, question in enumerate(settings.SET_ARCDPS_UPDATES, start=0):
+                question_view = set_multi_config_view.SetMultiConfigView(config_name=selected_option,
+                                                                         question=question,
+                                                                         channel=interaction.channel,
+                                                                         user=interaction.user)
+                answer = await question_view.send_question(index)
+                answers[answer_key[index]] = answer
+                if answer == "APPLICATION_CANCEL":
+                    break
+
+            self.clear_items()
+            await self.set_generic_config(name="arcdps_updates",
+                                          value=answers,
+                                          send_response=False)
+            try:
+                await bot.reload_extension("src.cogs.arcdps_updates_cog")
+            except:
+                pass
 
         await self.msg.channel.send(embed=self.embed, view=self)
 
