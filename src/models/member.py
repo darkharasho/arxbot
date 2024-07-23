@@ -80,7 +80,7 @@ class Member(BaseModel):
         return self.gw2_stats["wvw_ranks"]["this_week"] - self.gw2_stats["wvw_ranks"]["last_week"]
 
     def weekly_deaths_count(self):
-        if not self.gw2_stats:
+        if not self.gw2_stats or 'deaths' not in self.gw2_stats:
             return 0
         return self.gw2_stats["deaths"]["this_week"] - self.gw2_stats["deaths"]["last_week"]
 
