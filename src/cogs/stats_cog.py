@@ -46,7 +46,7 @@ class StatsCog(commands.Cog):
             embed.add_field(name="", value="```----- Guild Wars 2 Stats -----```", inline=False)
             if db_member.api_key_is_leaderboard_enabled():
                 embed.add_field(name="Accounts", value=f"```" + str(len(db_member.api_keys)) + "```")
-                embed.add_field(name="WvW Rank", value=f"```" + str(gw2_account_info["wvw_rank"]) + "```")
+                embed.add_field(name="WvW Rank", value=f"```" + str(gw2_account_info["wvw"]["rank"]) + "```")
                 embed.add_field(name="Legendary Spikes", value=f"```" + str(db_member.legendary_spikes()) + "```")
                 embed.add_field(name="Weekly Ranks", value=f"```" + str(db_member.weekly_ranks_count()) + "```")
                 embed.add_field(name="Weekly Kills", value=f"```" + str(db_member.weekly_kill_count()) + "```")
