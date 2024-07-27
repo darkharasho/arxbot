@@ -168,12 +168,8 @@ class AdminValidateApiCog(commands.Cog):
                             if api_keys.count() == 0:
                                 usernames_without_keys.append(member.username)
 
-                    # Print the usernames
-                    for username in usernames_without_keys:
-                        print(username)
-
                     # Respond to the interaction indicating completion
-                    await interaction.followup.send("Usernames have been printed to the console.", ephemeral=True)
+                    await interaction.followup.send("\n".join(usernames_without_keys), ephemeral=True)
                 except Exception as e:
                     logger.error(f"An error occurred: {e}")
                     print(f"An error occurred: {e}")  # Fallback print to stdout
