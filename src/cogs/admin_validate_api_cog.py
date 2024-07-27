@@ -228,12 +228,12 @@ class AdminValidateApiCog(commands.Cog):
                 excluded_role = "Alliance Member"
 
                 # Check if the "Alliance Member" role exists, and create it if it doesn't
-                alliance_member_role = discord.utils.get(guild.roles, name=excluded_role)
+                alliance_member_role = discord.utils.get(interaction.guild.roles, name=excluded_role)
 
                 # List to store matching members
                 matching_members = []
 
-                for member in guild.members:
+                for member in interaction.guild.members:
                     member_roles = {role.name for role in member.roles}
                     if member_roles.intersection(roles_to_check) and excluded_role not in member_roles:
                         role_names = [role.name for role in member.roles if role.name in roles_to_check]
