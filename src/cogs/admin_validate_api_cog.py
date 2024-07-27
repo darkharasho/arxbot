@@ -44,8 +44,8 @@ class AdminValidateApiCog(commands.Cog):
             if action == 'stats':
                 await interaction.response.defer(ephemeral=True)
                 # Query members with and without API keys
-                mem_with_key = Member.select().join(ApiKey).distinct()
-                mem_without_key = Member.select().join(ApiKey, JOIN.LEFT_OUTER).where(ApiKey.id.is_null())
+                mem_with_key = Member.select().join(ApiKey).where(Member.guild_id == interaction.guild.id).distinct()
+                mem_without_key = Member.select().join(ApiKey, JOIN.LEFT_OUTER).where((ApiKey.id.is_null()) & (ApiKey.guild_id == interaction.guild))
 
                 # Create a table using tabulate
                 table = [
