@@ -15,6 +15,7 @@ from src.models.api_key import ApiKey
 from datetime import datetime
 from src.db_viewer import DBViewer
 from src.lib.smart_embed import SmartEmbed
+from src.gw2_api_client import GW2ApiClient
 
 tabulate.PRESERVE_WHITESPACE = True
 
@@ -38,7 +39,8 @@ class AdminValidateApiCog(commands.Cog):
     @app_commands.choices(action=[
         app_commands.Choice(name='📈 Stats', value='stats'),
         app_commands.Choice(name='❌🗝️ Without Key', value='without_key'),
-        app_commands.Choice(name='Raw Without Key', value='raw_without_key')
+        app_commands.Choice(name='Raw Without Key', value='raw_without_key'),
+        app_commands.Choice(name='GW2 Map Without Key', value='gw2_map_without_key')
     ])
     async def admin_validate_api(self, interaction: discord.Interaction, action: str):
         if await authorization.ensure_admin(interaction):
@@ -173,6 +175,13 @@ class AdminValidateApiCog(commands.Cog):
                 except Exception as e:
                     logger.error(f"An error occurred: {e}")
                     print(f"An error occurred: {e}")  # Fallback print to stdout
+            elif action == 'gw2_map_without_key':
+                await interaction.response.defer(ephemeral=True)
+                current_user = Member.select().where(Member.discord_id == interaction.user.id).first()
+
+                if current_user:
+                    guild_members = GW2ApiClient(api_key=current_user.api_key).guild(gw2_guild_id="23B352FB-9C18-EF11-81A9-8FB5CFBE7766")
+                    await interaction.followup.send(guild_members, ephemeral=True)
 
 
 async def setup(bot):

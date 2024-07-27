@@ -74,6 +74,23 @@ class GW2ApiClient:
         else:
             print(f"Request failed with status code {response.status_code}")
 
+    def guild_members(self, *args, **kwargs):
+        gw2_guild_id = kwargs.get('gw2_guild_id', None)
+        auth = kwargs.get('auth', True)
+        ping_url = self.url + "/guild"
+        if gw2_guild_id:
+            ping_url += f"/{gw2_guild_id}/members"
+        if auth:
+            response = requests.get(ping_url, headers=self.headers)
+        else:
+            response = requests.get(ping_url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            return json.loads(response.text)
+        else:
+            print(f"Request failed with status code {response.status_code}")
+
     def guild_search(self, *args, **kwargs):
         guild_name = kwargs.get('guild_name', None)
         ping_url = self.url + f"/guild/search?name={guild_name}"
