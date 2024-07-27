@@ -70,18 +70,27 @@ class AdminValidateApiCog(commands.Cog):
                 # Query for members without API keys
                 members_without_keys = Member.select().join(ApiKey, JOIN.LEFT_OUTER).where(ApiKey.id.is_null())
 
-                # Create a table using tabulate
-                table = [["Username"]]
+                # Create a table using tabulate with multiple members per row
+                rows = []
+                current_row = []
+                max_per_row = 3  # Number of members per row
                 guild = interaction.guild
 
                 # Filter for members with the "Alliance Member" role
                 for member in members_without_keys:
                     discord_member = guild.get_member(member.discord_id)
                     if discord_member and discord.utils.get(discord_member.roles, name="Alliance Member"):
-                        table.append([member.username])
+                        current_row.append(member.username)
+                        if len(current_row) == max_per_row:
+                            rows.append(current_row)
+                            current_row = []
 
-                # Convert the table to a string
-                table_str = tabulate(table, headers="firstrow", tablefmt="grid")
+                # Append any remaining members
+                if current_row:
+                    rows.append(current_row)
+
+                # Convert the rows to a string
+                table_str = tabulate(rows, tablefmt="grid")
 
                 # Split the table into chunks to fit into multiple embeds
                 MAX_CHAR = 1024
@@ -97,7 +106,6 @@ class AdminValidateApiCog(commands.Cog):
                 # Send the embeds
                 for embed in embeds:
                     await interaction.followup.send(embed=embed, ephemeral=True)
-
 
 async def setup(bot):
     for guild in bot.guilds:
