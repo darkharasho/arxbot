@@ -37,7 +37,8 @@ class AdminValidateApiCog(commands.Cog):
     )
     @app_commands.choices(action=[
         app_commands.Choice(name='📈 Stats', value='stats'),
-        app_commands.Choice(name='❌🗝️ Without Key', value='without_key')
+        app_commands.Choice(name='❌🗝️ Without Key', value='without_key'),
+        app_commands.Choice(name='Raw Without Key', value='raw_without_key')
     ])
     async def admin_validate_api(self, interaction: discord.Interaction, action: str):
         if await authorization.ensure_admin(interaction):
@@ -141,6 +142,38 @@ class AdminValidateApiCog(commands.Cog):
                     # Send the embeds
                     for embed in embeds:
                         await interaction.followup.send(embed=embed, ephemeral=True)
+                except Exception as e:
+                    logger.error(f"An error occurred: {e}")
+                    print(f"An error occurred: {e}")  # Fallback print to stdout
+            elif action == 'raw_without_key':
+                # Defer the response to allow time for processing
+                await interaction.response.defer(ephemeral=True)
+
+                try:
+                    # Get the guild ID from the interaction
+                    guild_id = interaction.guild.id
+
+                    # Fetch all members for the current guild
+                    all_members = Member.select().where(Member.guild_id == guild_id)
+
+                    # List to hold usernames without API keys
+                    usernames_without_keys = []
+
+                    # Iterate over all members and filter those without API keys and with the "Alliance Member" role
+                    guild = interaction.guild
+                    for member in all_members:
+                        discord_member = guild.get_member(member.discord_id)
+                        if discord_member and discord.utils.get(discord_member.roles, name="Alliance Member"):
+                            api_keys = ApiKey.select().where(ApiKey.member == member)
+                            if api_keys.count() == 0:
+                                usernames_without_keys.append(member.username)
+
+                    # Print the usernames
+                    for username in usernames_without_keys:
+                        print(username)
+
+                    # Respond to the interaction indicating completion
+                    await interaction.followup.send("Usernames have been printed to the console.", ephemeral=True)
                 except Exception as e:
                     logger.error(f"An error occurred: {e}")
                     print(f"An error occurred: {e}")  # Fallback print to stdout
