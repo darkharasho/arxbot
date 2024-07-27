@@ -89,8 +89,11 @@ class AdminValidateApiCog(commands.Cog):
                 await interaction.response.defer(ephemeral=True)
 
                 try:
-                    # Fetch all members
-                    all_members = Member.select().where(Member.guild_id == interaction.guild.id)
+                    # Get the guild ID from the interaction
+                    guild_id = interaction.guild.id
+
+                    # Fetch all members for the current guild
+                    all_members = Member.select().where(Member.guild_id == guild_id)
 
                     # Create a table using tabulate with multiple members per row
                     rows = []
