@@ -150,7 +150,7 @@ class AdminValidateApiCog(commands.Cog):
                     print(f"An error occurred: {e}")  # Fallback print to stdout
             elif action == 'raw_without_key':
                 # Defer the response to allow time for processing
-                await interaction.response.defer(ephemeral=True)
+                await interaction.response.defer()
 
                 try:
                     # Get the guild ID from the interaction
@@ -200,15 +200,12 @@ class AdminValidateApiCog(commands.Cog):
 
                     # Send the message chunks
                     for chunk in message_chunks:
-                        await interaction.followup.send(chunk, ephemeral=True)
+                        await interaction.followup.send(chunk)
 
                 except Exception as e:
                     logger.error(f"An error occurred: {e}")
-                    await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
+                    await interaction.followup.send(f"An error occurred: {e}")
 
-                except Exception as e:
-                    logger.error(f"An error occurred: {e}")
-                    await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
             elif action == 'gw2_map_without_key':
                 await interaction.response.defer(ephemeral=True)
                 current_user = Member.select().where(Member.discord_id == interaction.user.id).first()
