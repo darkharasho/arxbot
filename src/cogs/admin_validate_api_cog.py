@@ -149,7 +149,7 @@ class AdminValidateApiCog(commands.Cog):
                     print(f"An error occurred: {e}")  # Fallback print to stdout
             elif action == 'raw_without_key':
                 # Defer the response to allow time for processing
-                await interaction.response.defer()
+                await interaction.response.defer(ephemeral=True)
 
                 try:
                     # Get the guild ID from the interaction
@@ -158,8 +158,8 @@ class AdminValidateApiCog(commands.Cog):
                     # Fetch all members for the current guild
                     all_members = Member.select().where(Member.guild_id == guild_id)
 
-                    # List to hold usernames and their roles without API keys
-                    usernames_with_roles = []
+                    # Dictionary to hold roles and corresponding members
+                    roles_to_members = defaultdict(list)
 
                     # Iterate over all members and filter those without API keys and with the "Alliance Member" role
                     guild = interaction.guild
@@ -168,35 +168,40 @@ class AdminValidateApiCog(commands.Cog):
                         if discord_member and discord.utils.get(discord_member.roles, name="Alliance Member"):
                             api_keys = ApiKey.select().where(ApiKey.member == member)
                             if api_keys.count() == 0:
-                                role_names = [role.name for role in discord_member.roles if role != guild.default_role]
-                                usernames_with_roles.append(f"{member.username} - Roles: {', '.join(role_names)}")
+                                for role in discord_member.roles:
+                                    if role.name != "Alliance Member" and role != guild.default_role:
+                                        roles_to_members[role.name].append(member.username)
 
-                    # Split the list into chunks that respect the 2000 character limit
-                    chunk_size = 2000
+                    # Prepare the message chunks
+                    message_chunks = []
                     current_chunk = []
                     current_length = 0
-                    chunks = []
+                    chunk_size = 2000
 
-                    for line in usernames_with_roles:
-                        line_length = len(line) + 1  # +1 for the newline character
-                        if current_length + line_length > chunk_size:
-                            chunks.append("\n".join(current_chunk))
-                            current_chunk = [line]
-                            current_length = line_length
+                    for role, members in roles_to_members.items():
+                        role_header = f"**{role}**\n"
+                        role_members = "\n".join(members) + "\n"
+                        section = role_header + role_members
+                        section_length = len(section)
+
+                        if current_length + section_length > chunk_size:
+                            message_chunks.append("".join(current_chunk))
+                            current_chunk = [section]
+                            current_length = section_length
                         else:
-                            current_chunk.append(line)
-                            current_length += line_length
+                            current_chunk.append(section)
+                            current_length += section_length
 
                     if current_chunk:
-                        chunks.append("\n".join(current_chunk))
+                        message_chunks.append("".join(current_chunk))
 
-                    # Send the chunks in follow-up messages
-                    for chunk in chunks:
-                        await interaction.followup.send(chunk)
+                    # Send the message chunks
+                    for chunk in message_chunks:
+                        await interaction.followup.send(chunk, ephemeral=True)
 
                 except Exception as e:
                     logger.error(f"An error occurred: {e}")
-                    await interaction.followup.send(f"An error occurred: {e}")
+                    await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
             elif action == 'gw2_map_without_key':
                 await interaction.response.defer(ephemeral=True)
                 current_user = Member.select().where(Member.discord_id == interaction.user.id).first()
