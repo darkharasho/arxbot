@@ -6,6 +6,7 @@ from discord.ext import commands
 from discord import app_commands
 from config import settings
 from src import helpers
+from src.lib.logger import logger
 from src import authorization
 from tabulate import tabulate
 from peewee import *
