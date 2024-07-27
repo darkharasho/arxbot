@@ -22,6 +22,12 @@ from src.gw2_api_client import GW2ApiClient
 tabulate.PRESERVE_WHITESPACE = True
 
 
+async def send_large_message(interaction, content, chunk_size=2000):
+    """Utility function to send large messages split into chunks."""
+    chunks = textwrap.wrap(content, width=chunk_size, replace_whitespace=False)
+    for chunk in chunks:
+        await interaction.followup.send(chunk, ephemeral=True)
+
 class AdminValidateApiCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -44,7 +50,8 @@ class AdminValidateApiCog(commands.Cog):
         app_commands.Choice(name='Raw Without Key', value='raw_without_key'),
         app_commands.Choice(name='GW2 Map Without Key', value='gw2_map_without_key'),
         app_commands.Choice(name='🛠️ Fix Alliance Member Role', value='without_alliance_member'),
-        app_commands.Choice(name='👤 Create Default Users', value='create_default_users')
+        app_commands.Choice(name='👤 Create Default Users', value='create_default_users'),
+        app_commands.Choice(name='🚮 Remove roles without api key', value='remove_roles')
     ])
     async def admin_validate_api(self, interaction: discord.Interaction, action: str):
         if await authorization.ensure_admin(interaction):
@@ -210,12 +217,6 @@ class AdminValidateApiCog(commands.Cog):
                     await interaction.followup.send(f"An error occurred: {e}")
 
             elif action == 'gw2_map_without_key':
-                async def send_large_message(interaction, content, chunk_size=2000):
-                    """Utility function to send large messages split into chunks."""
-                    chunks = textwrap.wrap(content, width=chunk_size, replace_whitespace=False)
-                    for chunk in chunks:
-                        await interaction.followup.send(chunk, ephemeral=True)
-
                 await interaction.response.defer(ephemeral=True)
                 current_user = Member.select().where(Member.discord_id == interaction.user.id).first()
 
@@ -324,8 +325,50 @@ class AdminValidateApiCog(commands.Cog):
                     await interaction.followup.send("No members found", ephemeral=True)
                 else:
                     for chunk in message_chunks:
-                        await interaction.followup.send(chunk, ephemeral=True)
+                        await interaction.followup.send(chunk, ephemeral=True),
+            elif action == 'remove_roles':
+                # Defer the response to allow time for processing
+                await interaction.response.defer()
 
+                roles_to_check = {"DUI", "eA", "SC", "EWW", "PUGS", "PUMP", "bad", "kD", "VIXI", "XXX",
+                                  "Alliance Member"}
+
+                try:
+                    # Get the guild and the "Alliance Member" role
+                    guild = interaction.guild
+                    alliance_member_role = discord.utils.get(guild.roles, name="Alliance Member")
+
+                    # Dictionary to hold roles and corresponding members
+                    roles_to_members = defaultdict(list)
+
+                    # Iterate over all members with the "Alliance Member" role
+                    for discord_member in guild.members:
+                        if alliance_member_role in discord_member.roles:
+                            db_member = Member.find_or_create(member=discord_member, guild=guild)
+
+                            if db_member.api_keys.count() == 0:
+                                # Collect the roles to remove
+                                roles_to_remove = [role for role in discord_member.roles if role.name in roles_to_check]
+                                for role in roles_to_remove:
+                                    roles_to_members[role.name].append(discord_member.display_name)
+                                # Remove the roles
+                                await discord_member.remove_roles(*roles_to_remove, reason="Lack of API Key")
+                                logger.info(f'Removed roles from {discord_member.name}#{discord_member.discriminator}')
+
+                    # Prepare the message content
+                    message_content = ""
+                    for role, members in roles_to_members.items():
+                        message_content += f"**{role}**\n" + "\n".join(members) + "\n\n"
+
+                    # Send the message
+                    if message_content:
+                        await send_large_message(interaction, message_content)
+                    else:
+                        await interaction.followup.send("No members found without API keys.", ephemeral=True)
+
+                except Exception as e:
+                    logger.error(f"An error occurred: {e}")
+                    await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
 
 async def setup(bot):
     for guild in bot.guilds:

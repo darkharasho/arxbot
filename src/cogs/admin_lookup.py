@@ -40,7 +40,7 @@ class AdminLookup(commands.Cog):
             await interaction.response.defer(ephemeral=True)
             db_member = Member.find_or_create(member=member, guild=interaction.guild)
 
-            embed = discord.Embed(title=member.name, description="")
+            embed = discord.Embed(title=f"{member.display_name} | {member.name}", description="")
             embed.set_thumbnail(url=member.display_avatar.url)
             embed.add_field(name="", value="```------ Account Details ------```", inline=False)
 
