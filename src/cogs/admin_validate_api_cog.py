@@ -149,7 +149,7 @@ class AdminValidateApiCog(commands.Cog):
                     print(f"An error occurred: {e}")  # Fallback print to stdout
             elif action == 'raw_without_key':
                 # Defer the response to allow time for processing
-                await interaction.response.defer(ephemeral=True)
+                await interaction.response.defer()
 
                 try:
                     # Get the guild ID from the interaction
@@ -172,7 +172,7 @@ class AdminValidateApiCog(commands.Cog):
                                 usernames_with_roles.append(f"{member.username} - Roles: {', '.join(role_names)}")
 
                     # Send the usernames with roles in the follow-up message
-                    await interaction.followup.send("\n".join(usernames_with_roles), ephemeral=True)
+                    await interaction.followup.send("\n".join(usernames_with_roles))
                 except Exception as e:
                     logger.error(f"An error occurred: {e}")
                     await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
