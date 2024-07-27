@@ -85,7 +85,7 @@ class AdminValidateApiCog(commands.Cog):
                 # Create the embeds
                 embeds = []
                 for i, chunk in enumerate(table_chunks):
-                    embed = Embed(title=f"📊 Members Without API Keys (Page {i + 1})", description=f"```\n{chunk}\n```")
+                    embed = discord.Embed(title=f"📊 Members Without API Keys (Page {i + 1})", description=f"```\n{chunk}\n```")
                     embeds.append(embed)
 
                 # Send the embeds
