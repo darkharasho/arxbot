@@ -1,6 +1,7 @@
 import pdb
 import discord
 import json
+import textwrap
 
 from collections import defaultdict
 from discord.ext import commands
@@ -209,18 +210,32 @@ class AdminValidateApiCog(commands.Cog):
                     await interaction.followup.send(f"An error occurred: {e}")
 
             elif action == 'gw2_map_without_key':
+                async def send_large_message(interaction, content, chunk_size=2000):
+                    """Utility function to send large messages split into chunks."""
+                    chunks = textwrap.wrap(content, width=chunk_size, replace_whitespace=False)
+                    for chunk in chunks:
+                        await interaction.followup.send(chunk, ephemeral=True)
+
                 await interaction.response.defer(ephemeral=True)
                 current_user = Member.select().where(Member.discord_id == interaction.user.id).first()
 
                 if current_user:
-                    guild_members = GW2ApiClient(api_key=current_user.api_key).guild_members(gw2_guild_id="23B352FB-9C18-EF11-81A9-8FB5CFBE7766")
+                    guild_members = GW2ApiClient(api_key=current_user.api_key).guild_members(
+                        gw2_guild_id="23B352FB-9C18-EF11-81A9-8FB5CFBE7766")
                     extra_guild_member_igns = []
                     for member in guild_members:
-                        keys = ApiKey.select().where((ApiKey.guild_id == interaction.guild.id) & (ApiKey.name == member["name"]))
+                        keys = ApiKey.select().where(
+                            (ApiKey.guild_id == interaction.guild.id) & (ApiKey.name == member["name"]))
                         if keys.count() == 0:
                             extra_guild_member_igns.append(member["name"])
 
-                    await interaction.followup.send(f"In Game Guild Members Without API Keys Count: {len(extra_guild_member_igns)}", ephemeral=True)
+                    # Prepare the message content
+                    member_names_str = "\n".join(extra_guild_member_igns)
+                    overall_count_message = f"In Game Guild Members Without API Keys Count: {len(extra_guild_member_igns)}\n"
+                    full_message = overall_count_message + member_names_str
+
+                    # Send the large message split into chunks
+                    await send_large_message(interaction, full_message)
             elif action == 'without_alliance_member':
                 await interaction.response.defer(ephemeral=True)
 
