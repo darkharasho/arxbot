@@ -171,11 +171,32 @@ class AdminValidateApiCog(commands.Cog):
                                 role_names = [role.name for role in discord_member.roles if role != guild.default_role]
                                 usernames_with_roles.append(f"{member.username} - Roles: {', '.join(role_names)}")
 
-                    # Send the usernames with roles in the follow-up message
-                    await interaction.followup.send("\n".join(usernames_with_roles))
+                    # Split the list into chunks that respect the 2000 character limit
+                    chunk_size = 2000
+                    current_chunk = []
+                    current_length = 0
+                    chunks = []
+
+                    for line in usernames_with_roles:
+                        line_length = len(line) + 1  # +1 for the newline character
+                        if current_length + line_length > chunk_size:
+                            chunks.append("\n".join(current_chunk))
+                            current_chunk = [line]
+                            current_length = line_length
+                        else:
+                            current_chunk.append(line)
+                            current_length += line_length
+
+                    if current_chunk:
+                        chunks.append("\n".join(current_chunk))
+
+                    # Send the chunks in follow-up messages
+                    for chunk in chunks:
+                        await interaction.followup.send(chunk)
+
                 except Exception as e:
                     logger.error(f"An error occurred: {e}")
-                    await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
+                    await interaction.followup.send(f"An error occurred: {e}")
             elif action == 'gw2_map_without_key':
                 await interaction.response.defer(ephemeral=True)
                 current_user = Member.select().where(Member.discord_id == interaction.user.id).first()
