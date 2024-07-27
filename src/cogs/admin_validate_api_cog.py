@@ -70,7 +70,7 @@ class AdminValidateApiCog(commands.Cog):
 
                 try:
                     # Fetch all members
-                    all_members = Member.select()
+                    all_members = Member.select().where(Member.guild_id == interaction.guild.id)
 
                     # Create a table using tabulate with multiple members per row
                     rows = []
