@@ -19,7 +19,7 @@ from src.lib.smart_embed import SmartEmbed
 tabulate.PRESERVE_WHITESPACE = True
 
 
-class CheckCog(commands.Cog):
+class AdminCheckCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -32,7 +32,7 @@ class CheckCog(commands.Cog):
         }
 
     @app_commands.command(
-        name="check",
+        name="admin_check",
         description="Admin: Debug Member"
     )
     @app_commands.choices(action=[
@@ -87,4 +87,4 @@ class CheckCog(commands.Cog):
 
 async def setup(bot):
     for guild in bot.guilds:
-        await bot.add_cog(CheckCog(bot), guild=guild, override=True)
+        await bot.add_cog(AdminCheckCog(bot), guild=guild, override=True)
