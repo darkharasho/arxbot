@@ -220,7 +220,7 @@ class AdminValidateApiCog(commands.Cog):
                         if keys.count() == 0:
                             extra_guild_member_igns.append(member["name"])
 
-                    await interaction.followup.send("\n".join(extra_guild_member_igns[:10]), ephemeral=True)
+                    await interaction.followup.send(f"In Game Guild Members Without API Keys Count: {len(extra_guild_member_igns)}", ephemeral=True)
             elif action == 'without_alliance_member':
                 await interaction.response.defer(ephemeral=True)
 
