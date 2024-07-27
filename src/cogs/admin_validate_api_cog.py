@@ -70,24 +70,25 @@ class AdminValidateApiCog(commands.Cog):
                 # Query for members without API keys
                 members_without_keys = Member.select().join(ApiKey, JOIN.LEFT_OUTER).where(ApiKey.id.is_null())
 
-                # Debug: Print members without API keys
-                print("Debug: Members without API Keys")
-                for member in members_without_keys:
-                    print(f"Member: {member.username}, Discord ID: {member.discord_id}")
-
                 # Create a table using tabulate
                 table = [["Username"]]
                 for member in members_without_keys:
                     table.append([member.username])
 
                 # Convert the table to a string
-                table_str = tabulate(table, headers="firstrow", tablefmt="grid")
+                table_str = tabulate.tabulate(table, headers="firstrow", tablefmt="grid")
 
-                # Create the embed
-                embed = SmartEmbed(title="📊 Members Without API Keys", description=f"```\n{table_str}\n```")
-                embeds = embed.create_embeds()
+                # Split the table into chunks to fit into multiple embeds
+                MAX_CHAR = 1024
+                table_chunks = [table_str[i:i + MAX_CHAR] for i in range(0, len(table_str), MAX_CHAR)]
 
-                # Send the embed
+                # Create the embeds
+                embeds = []
+                for i, chunk in range(0, len(table_chunks)):
+                    embed = Embed(title=f"📊 Members Without API Keys (Page {i + 1})", description=f"```\n{chunk}\n```")
+                    embeds.append(embed)
+
+                # Send the embeds
                 for embed in embeds:
                     await interaction.followup.send(embed=embed, ephemeral=True)
 
