@@ -76,7 +76,7 @@ class AdminValidateApiCog(commands.Cog):
                     table.append([member.username])
 
                 # Convert the table to a string
-                table_str = tabulate.tabulate(table, headers="firstrow", tablefmt="grid")
+                table_str = tabulate(table, headers="firstrow", tablefmt="grid")
 
                 # Split the table into chunks to fit into multiple embeds
                 MAX_CHAR = 1024
