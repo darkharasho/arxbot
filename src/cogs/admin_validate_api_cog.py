@@ -69,21 +69,8 @@ class AdminValidateApiCog(commands.Cog):
                 await interaction.response.defer(ephemeral=True)
 
                 try:
-                    # Raw SQL query to find members without API keys
-                    sql_query = """
-                        SELECT member.id, member.username, member.discord_id
-                        FROM member
-                        LEFT JOIN apikey ON member.id = apikey.member_id
-                        WHERE apikey.id IS NULL
-                    """
-
-                    # Execute raw SQL query
-                    members_without_keys = Member.raw(sql_query).execute()
-
-                    # Debug: Print members without API keys
-                    logger.info("Debug: Members without API Keys")
-                    for member in members_without_keys:
-                        logger.info(f"Member: {member.username}, Discord ID: {member.discord_id}")
+                    # Fetch all members
+                    all_members = Member.select()
 
                     # Create a table using tabulate with multiple members per row
                     rows = []
@@ -91,14 +78,16 @@ class AdminValidateApiCog(commands.Cog):
                     max_per_row = 3  # Number of members per row
                     guild = interaction.guild
 
-                    # Filter for members with the "Alliance Member" role
-                    for member in members_without_keys:
+                    # Iterate over all members and filter those without API keys and with the "Alliance Member" role
+                    for member in all_members:
                         discord_member = guild.get_member(member.discord_id)
                         if discord_member and discord.utils.get(discord_member.roles, name="Alliance Member"):
-                            current_row.append(member.username)
-                            if len(current_row) == max_per_row:
-                                rows.append(current_row)
-                                current_row = []
+                            api_keys = ApiKey.select().where(ApiKey.member == member)
+                            if api_keys.count() == 0:
+                                current_row.append(member.username)
+                                if len(current_row) == max_per_row:
+                                    rows.append(current_row)
+                                    current_row = []
 
                     # Append any remaining members
                     if current_row:
