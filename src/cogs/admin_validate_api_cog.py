@@ -212,11 +212,13 @@ class AdminValidateApiCog(commands.Cog):
 
                 if current_user:
                     guild_members = GW2ApiClient(api_key=current_user.api_key).guild_members(gw2_guild_id="23B352FB-9C18-EF11-81A9-8FB5CFBE7766")
-                    guild_member_igns = []
+                    extra_guild_member_igns = []
                     for member in guild_members:
-                        guild_member_igns.append(member["name"])
+                        keys = ApiKey.select().where((ApiKey.guild_id == interaction.guild.id) & (ApiKey.name == member["name"]))
+                        if keys.count() == 0:
+                            extra_guild_member_igns.append(member["name"])
 
-                    await interaction.followup.send("\n".join(guild_member_igns[:10]), ephemeral=True)
+                    await interaction.followup.send("\n".join(extra_guild_member_igns[:10]), ephemeral=True)
 
 
 async def setup(bot):
