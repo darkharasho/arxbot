@@ -42,28 +42,48 @@ class AdminValidateApiCog(commands.Cog):
     async def admin_validate_api(self, interaction: discord.Interaction, action: str):
         if await authorization.ensure_admin(interaction):
             if action == 'stats':
+                # Defer the response to allow time for processing
                 await interaction.response.defer(ephemeral=True)
-                # Query members with and without API keys
-                mem_with_key = Member.select().join(ApiKey).where(Member.guild_id == interaction.guild.id).distinct()
-                mem_without_key = Member.select().join(ApiKey, JOIN.LEFT_OUTER).where((ApiKey.id.is_null()) & (ApiKey.guild_id == interaction.guild.id))
 
-                # Create a table using tabulate
-                table = [
-                    ["Status", "Count"],
-                    ["With Key", len(mem_with_key)],
-                    ["Without Key", len(mem_without_key)]
-                ]
+                try:
+                    # Get the guild ID from the interaction
+                    guild_id = interaction.guild.id
 
-                # Convert the table to a string
-                table_str = tabulate(table, headers="firstrow", tablefmt="grid")
+                    # Fetch all members for the current guild
+                    all_members = Member.select().where(Member.guild_id == guild_id)
 
-                # Create the embed
-                embed = SmartEmbed(title="📊 API Key Stats", description=f"```\n{table_str}\n```")
-                embeds = embed.create_embeds()
+                    # Initialize counters
+                    members_with_keys_count = 0
+                    members_without_keys_count = 0
 
-                # Send the embed
-                for embed in embeds:
-                    await interaction.followup.send(embed=embed, ephemeral=True)
+                    # Iterate over all members and count those with and without API keys
+                    for member in all_members:
+                        api_keys = ApiKey.select().where(ApiKey.member == member)
+                        if api_keys.count() > 0:
+                            members_with_keys_count += 1
+                        else:
+                            members_without_keys_count += 1
+
+                    # Create a table using tabulate
+                    table = [
+                        ["Status", "Count"],
+                        ["With Key", members_with_keys_count],
+                        ["Without Key", members_without_keys_count]
+                    ]
+
+                    # Convert the table to a string
+                    table_str = tabulate(table, headers="firstrow", tablefmt="grid")
+
+                    # Create the embed
+                    embed = SmartEmbed(title="📊 API Key Stats", description=f"```\n{table_str}\n```")
+                    embeds = embed.create_embeds()
+
+                    # Send the embed
+                    for embed in embeds:
+                        await interaction.followup.send(embed=embed, ephemeral=True)
+                except Exception as e:
+                    logger.error(f"An error occurred: {e}")
+                    print(f"An error occurred: {e}")  # Fallback print to stdout
             elif action == 'without_key':
                 # Defer the response to allow time for processing
                 await interaction.response.defer(ephemeral=True)
