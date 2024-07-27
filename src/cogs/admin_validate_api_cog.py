@@ -72,8 +72,13 @@ class AdminValidateApiCog(commands.Cog):
 
                 # Create a table using tabulate
                 table = [["Username"]]
+                guild = interaction.guild
+
+                # Filter for members with the "Alliance Member" role
                 for member in members_without_keys:
-                    table.append([member.username])
+                    discord_member = guild.get_member(member.discord_id)
+                    if discord_member and discord.utils.get(discord_member.roles, name="Alliance Member"):
+                        table.append([member.username])
 
                 # Convert the table to a string
                 table_str = tabulate(table, headers="firstrow", tablefmt="grid")
@@ -85,7 +90,8 @@ class AdminValidateApiCog(commands.Cog):
                 # Create the embeds
                 embeds = []
                 for i, chunk in enumerate(table_chunks):
-                    embed = discord.Embed(title=f"📊 Members Without API Keys (Page {i + 1})", description=f"```\n{chunk}\n```")
+                    embed = discord.Embed(title=f"📊 Alliance Members Without API Keys (Page {i + 1})",
+                                  description=f"```\n{chunk}\n```")
                     embeds.append(embed)
 
                 # Send the embeds
