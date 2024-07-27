@@ -63,7 +63,6 @@ class AdminCheckCog(commands.Cog):
                     'Username': db_member.username,
                     'Created At': db_member.created_at,
                     'Updated At': db_member.updated_at,
-                    'GuildID': db_member.guild_id,
                     'DiscordID': db_member.discord_id,
                     'GW2 API Key': api_keys,  # Use the list of dictionaries
                     'GW2 Stats': gw2_stats if gw2_stats else {}  # Use gw2_stats directly if it's already a dict
@@ -98,7 +97,6 @@ class AdminCheckCog(commands.Cog):
                     'Username': db_member.username,
                     'Created At': db_member.created_at,
                     'Updated At': db_member.updated_at,
-                    'GuildID': db_member.guild_id,
                     'DiscordID': db_member.discord_id,
                     'GW2 API Key': api_keys,  # Use the list of dictionariest
                 }
