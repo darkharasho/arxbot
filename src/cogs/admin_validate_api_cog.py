@@ -41,7 +41,8 @@ class AdminValidateApiCog(commands.Cog):
         app_commands.Choice(name='📈 Stats', value='stats'),
         app_commands.Choice(name='❌🗝️ Without Key', value='without_key'),
         app_commands.Choice(name='Raw Without Key', value='raw_without_key'),
-        app_commands.Choice(name='GW2 Map Without Key', value='gw2_map_without_key')
+        app_commands.Choice(name='GW2 Map Without Key', value='gw2_map_without_key'),
+        app_commands.Choice(name='Without Alliance Member', value='without_alliance_member')
     ])
     async def admin_validate_api(self, interaction: discord.Interaction, action: str):
         if await authorization.ensure_admin(interaction):
@@ -219,6 +220,48 @@ class AdminValidateApiCog(commands.Cog):
                             extra_guild_member_igns.append(member["name"])
 
                     await interaction.followup.send("\n".join(extra_guild_member_igns[:10]), ephemeral=True)
+            elif action == 'without_alliance_member':
+                await interaction.response.defer(ephemeral=True)
+
+                # Define the roles to check
+                roles_to_check = {"DUI", "eA", "SC", "EWW", "PUGS", "PUMP", "bad", "kD", "VIXI", "XXX"}
+                excluded_role = "Alliance Member"
+                # List to store matching members
+                matching_members = []
+
+                for member in interaction.guild.members:
+                    member_roles = {role.name for role in member.roles}
+                    if member_roles.intersection(roles_to_check) and excluded_role not in member_roles:
+                        role_names = [role.name for role in member.roles if role.name in roles_to_check]
+                        matching_members.append(
+                            f"{member.name}#{member.discriminator} - Roles: {', '.join(role_names)}")
+
+                # Prepare the message chunks
+                chunk_size = 2000
+                current_chunk = []
+                current_length = 0
+                message_chunks = []
+
+                for line in matching_members:
+                    line_length = len(line) + 1  # +1 for the newline character
+                    if current_length + line_length > chunk_size:
+                        message_chunks.append("\n".join(current_chunk))
+                        current_chunk = [line]
+                        current_length = line_length
+                    else:
+                        current_chunk.append(line)
+                        current_length += line_length
+
+                if current_chunk:
+                    message_chunks.append("\n".join(current_chunk))
+
+
+                # Print the message chunks
+                if len(message_chunks) == 0:
+                    await interaction.followup.send("No members found", ephemeral=True)
+                else:
+                    for chunk in message_chunks:
+                        await interaction.followup.send(chunk, ephemeral=True)
 
 
 async def setup(bot):
