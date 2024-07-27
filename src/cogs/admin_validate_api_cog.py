@@ -73,8 +73,8 @@ class AdminValidateApiCog(commands.Cog):
                     sql_query = """
                         SELECT member.id, member.username, member.discord_id
                         FROM member
-                        LEFT JOIN api_key ON member.id = api_key.member_id
-                        WHERE api_key.id IS NULL
+                        LEFT JOIN apikey ON member.id = apikey.member_id
+                        WHERE apikey.id IS NULL
                     """
 
                     # Execute raw SQL query
