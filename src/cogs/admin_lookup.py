@@ -42,13 +42,14 @@ class AdminLookup(commands.Cog):
 
             embed = discord.Embed(title=member.name, description="")
             embed.set_thumbnail(url=member.display_avatar.url)
+            embed.add_field(name="", value="```------ Account Details ------```", inline=False)
 
             if len(db_member.api_keys) > 0:
-                embed.add_field(name="", value="```------ Account Details ------```", inline=False)
                 embed.add_field(name="Guilds", value=f"```- " + '\n- '.join(db_member.gw2_guild_names()) + "```",
                                 inline=False)
                 embed.add_field(name="GW2 Accounts", value="```- " + "\n- ".join(api_key.name for api_key in db_member.api_keys) + "```", inline=False)
-
+            else:
+                embed.add_field(name="API Keys", value="```No API Keys found```", inline=False)
             await interaction.followup.send(embed=embed, ephemeral=True)
 
 
