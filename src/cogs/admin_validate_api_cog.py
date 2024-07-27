@@ -158,8 +158,8 @@ class AdminValidateApiCog(commands.Cog):
                     # Fetch all members for the current guild
                     all_members = Member.select().where(Member.guild_id == guild_id)
 
-                    # List to hold usernames without API keys
-                    usernames_without_keys = []
+                    # List to hold usernames and their roles without API keys
+                    usernames_with_roles = []
 
                     # Iterate over all members and filter those without API keys and with the "Alliance Member" role
                     guild = interaction.guild
@@ -168,20 +168,25 @@ class AdminValidateApiCog(commands.Cog):
                         if discord_member and discord.utils.get(discord_member.roles, name="Alliance Member"):
                             api_keys = ApiKey.select().where(ApiKey.member == member)
                             if api_keys.count() == 0:
-                                usernames_without_keys.append(member.username)
+                                role_names = [role.name for role in discord_member.roles if role != guild.default_role]
+                                usernames_with_roles.append(f"{member.username} - Roles: {', '.join(role_names)}")
 
-                    # Respond to the interaction indicating completion
-                    await interaction.followup.send("\n".join(usernames_without_keys), ephemeral=True)
+                    # Send the usernames with roles in the follow-up message
+                    await interaction.followup.send("\n".join(usernames_with_roles), ephemeral=True)
                 except Exception as e:
                     logger.error(f"An error occurred: {e}")
-                    print(f"An error occurred: {e}")  # Fallback print to stdout
+                    await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
             elif action == 'gw2_map_without_key':
                 await interaction.response.defer(ephemeral=True)
                 current_user = Member.select().where(Member.discord_id == interaction.user.id).first()
 
                 if current_user:
-                    guild_members = GW2ApiClient(api_key=current_user.api_key).guild(gw2_guild_id="23B352FB-9C18-EF11-81A9-8FB5CFBE7766")
-                    await interaction.followup.send(guild_members, ephemeral=True)
+                    guild_members = GW2ApiClient(api_key=current_user.api_key).guild_members(gw2_guild_id="23B352FB-9C18-EF11-81A9-8FB5CFBE7766")
+                    guild_member_igns = []
+                    for member in guild_members:
+                        guild_member_igns.append(member["name"])
+
+                    await interaction.followup.send("\n".join(guild_member_igns[:10]), ephemeral=True)
 
 
 async def setup(bot):
