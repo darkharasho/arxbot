@@ -78,7 +78,7 @@ class AdminValidateApiCog(commands.Cog):
                     """
 
                     # Execute raw SQL query
-                    members_without_keys = RawQuery(Member, sql_query).execute()
+                    members_without_keys = Member.raw(sql_query).execute()
 
                     # Debug: Print members without API keys
                     logger.info("Debug: Members without API Keys")
