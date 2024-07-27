@@ -2,6 +2,7 @@ import pdb
 import discord
 import json
 
+from collections import defaultdict
 from discord.ext import commands
 from discord import app_commands
 from config import settings
