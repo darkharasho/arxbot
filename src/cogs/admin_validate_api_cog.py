@@ -70,10 +70,10 @@ class AdminValidateApiCog(commands.Cog):
 
                 try:
                     # Subquery to get member IDs with API keys
-                    members_with_api_keys = ApiKey.select(ApiKey.member).distinct()
+                    subquery = ApiKey.select(ApiKey.member_id).distinct()
 
                     # Query for members without API keys
-                    members_without_keys = Member.select().where(Member.id.not_in(members_with_api_keys))
+                    members_without_keys = Member.select().where(Member.id.not_in(subquery))
 
                     # Debug: Print all members and their API keys
                     logger.info("Debug: All Members and their API Keys")
