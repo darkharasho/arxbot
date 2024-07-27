@@ -42,7 +42,8 @@ class AdminValidateApiCog(commands.Cog):
         app_commands.Choice(name='❌🗝️ Without Key', value='without_key'),
         app_commands.Choice(name='Raw Without Key', value='raw_without_key'),
         app_commands.Choice(name='GW2 Map Without Key', value='gw2_map_without_key'),
-        app_commands.Choice(name='🛠️ Fix Alliance Member Role', value='without_alliance_member')
+        app_commands.Choice(name='🛠️ Fix Alliance Member Role', value='without_alliance_member'),
+        app_commands.Choice(name='👤 Create Default Users', value='create_default_users')
     ])
     async def admin_validate_api(self, interaction: discord.Interaction, action: str):
         if await authorization.ensure_admin(interaction):
@@ -261,6 +262,47 @@ class AdminValidateApiCog(commands.Cog):
                 if current_chunk:
                     message_chunks.append("\n".join(current_chunk))
 
+
+                # Print the message chunks
+                if len(message_chunks) == 0:
+                    await interaction.followup.send("No members found", ephemeral=True)
+                else:
+                    for chunk in message_chunks:
+                        await interaction.followup.send(chunk, ephemeral=True)
+            elif action == 'create_default_users':
+                await interaction.response.defer(ephemeral=True)
+
+                # Define the roles to check
+                role = "Alliance Member"
+                # List to store matching members
+                matching_members = []
+
+                # Check if the "Alliance Member" role exists, and create it if it doesn't
+                alliance_member_role = discord.utils.get(interaction.guild.roles, name=role)
+
+                for member in alliance_member_role.members:
+                    db_mem = Member.find_or_create(member=member, guild=interaction.guild)
+                    if db_mem == 'created':
+                        matching_members.append(member.name)
+
+                # Prepare the message chunks
+                chunk_size = 2000
+                current_chunk = []
+                current_length = 0
+                message_chunks = []
+
+                for line in matching_members:
+                    line_length = len(line) + 1  # +1 for the newline character
+                    if current_length + line_length > chunk_size:
+                        message_chunks.append("\n".join(current_chunk))
+                        current_chunk = [line]
+                        current_length = line_length
+                    else:
+                        current_chunk.append(line)
+                        current_length += line_length
+
+                if current_chunk:
+                    message_chunks.append("\n".join(current_chunk))
 
                 # Print the message chunks
                 if len(message_chunks) == 0:

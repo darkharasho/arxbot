@@ -154,14 +154,17 @@ class Member(BaseModel):
 
 
     @staticmethod
-    def find_or_create(member=discord.Member, guild=discord.Guild):
+    def find_or_create(member=discord.Member, guild=discord.Guild, report_create=False):
         db_member = Member.select().where((Member.discord_id == member.id) & (Member.guild_id == guild.id)).first()
         if db_member:
             return db_member
         else:
-            return Member.create(
-                username=member.name,
-                discord_id=member.id,
-                guild_id=guild.id,
-                created_at=datetime.datetime.now()
-            )
+            if report_create:
+                return 'created'
+            else:
+                return Member.create(
+                    username=member.name,
+                    discord_id=member.id,
+                    guild_id=guild.id,
+                    created_at=datetime.datetime.now()
+                )
