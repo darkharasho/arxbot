@@ -68,60 +68,65 @@ class AdminValidateApiCog(commands.Cog):
                 # Defer the response to allow time for processing
                 await interaction.response.defer(ephemeral=True)
 
-                # Query for members without API keys
-                members_without_keys = (Member
-                                        .select()
-                                        .join(ApiKey, JOIN.LEFT_OUTER, on=(Member.id == ApiKey.member_id))
-                                        .where(ApiKey.id.is_null()))
+                try:
+                    # Subquery to get member IDs with API keys
+                    members_with_api_keys = ApiKey.select(ApiKey.member).distinct()
 
-                # Debug: Print all members and their API keys
-                logger.info("Debug: All Members and their API Keys")
-                for member in Member.select():
-                    api_keys = ApiKey.select().where(ApiKey.member == member)
-                    logger.info(
-                        f"Member: {member.username}, Discord ID: {member.discord_id}, API Keys: {[key.value for key in api_keys]}")
+                    # Query for members without API keys
+                    members_without_keys = Member.select().where(Member.id.not_in(members_with_api_keys))
 
-                # Debug: Print members without API keys
-                logger.info("Debug: Members without API Keys")
-                for member in members_without_keys:
-                    logger.info(f"Member: {member.username}, Discord ID: {member.discord_id}")
+                    # Debug: Print all members and their API keys
+                    logger.info("Debug: All Members and their API Keys")
+                    for member in Member.select():
+                        api_keys = ApiKey.select().where(ApiKey.member == member)
+                        logger.info(
+                            f"Member: {member.username}, Discord ID: {member.discord_id}, API Keys: {[key.value for key in api_keys]}")
 
-                # Create a table using tabulate with multiple members per row
-                rows = []
-                current_row = []
-                max_per_row = 3  # Number of members per row
-                guild = interaction.guild
+                    # Debug: Print members without API keys
+                    logger.info("Debug: Members without API Keys")
+                    for member in members_without_keys:
+                        logger.info(f"Member: {member.username}, Discord ID: {member.discord_id}")
 
-                # Filter for members with the "Alliance Member" role
-                for member in members_without_keys:
-                    discord_member = guild.get_member(member.discord_id)
-                    if discord_member and discord.utils.get(discord_member.roles, name="Alliance Member"):
-                        current_row.append(member.username)
-                        if len(current_row) == max_per_row:
-                            rows.append(current_row)
-                            current_row = []
+                    # Create a table using tabulate with multiple members per row
+                    rows = []
+                    current_row = []
+                    max_per_row = 3  # Number of members per row
+                    guild = interaction.guild
 
-                # Append any remaining members
-                if current_row:
-                    rows.append(current_row)
+                    # Filter for members with the "Alliance Member" role
+                    for member in members_without_keys:
+                        discord_member = guild.get_member(member.discord_id)
+                        if discord_member and discord.utils.get(discord_member.roles, name="Alliance Member"):
+                            current_row.append(member.username)
+                            if len(current_row) == max_per_row:
+                                rows.append(current_row)
+                                current_row = []
 
-                # Convert the rows to a string
-                table_str = tabulate(rows, tablefmt="grid")
+                    # Append any remaining members
+                    if current_row:
+                        rows.append(current_row)
 
-                # Split the table into chunks to fit into multiple embeds
-                MAX_CHAR = 1024
-                table_chunks = [table_str[i:i + MAX_CHAR] for i in range(0, len(table_str), MAX_CHAR)]
+                    # Convert the rows to a string
+                    table_str = tabulate(rows, tablefmt="grid")
 
-                # Create the embeds
-                embeds = []
-                for i, chunk in enumerate(table_chunks):
-                    embed = discord.Embed(title=f"📊 Alliance Members Without API Keys (Page {i + 1})",
-                                  description=f"```\n{chunk}\n```")
-                    embeds.append(embed)
+                    # Split the table into chunks to fit into multiple embeds
+                    MAX_CHAR = 1024
+                    table_chunks = [table_str[i:i + MAX_CHAR] for i in range(0, len(table_str), MAX_CHAR)]
 
-                # Send the embeds
-                for embed in embeds:
-                    await interaction.followup.send(embed=embed, ephemeral=True)
+                    # Create the embeds
+                    embeds = []
+                    for i, chunk in enumerate(table_chunks):
+                        embed = discord.Embed(title=f"📊 Alliance Members Without API Keys (Page {i + 1})",
+                                      description=f"```\n{chunk}\n```")
+                        embeds.append(embed)
+
+                    # Send the embeds
+                    for embed in embeds:
+                        await interaction.followup.send(embed=embed, ephemeral=True)
+                except Exception as e:
+                    logger.error(f"An error occurred: {e}")
+                    print(f"An error occurred: {e}")  # Fallback print to stdout
+
 
 async def setup(bot):
     for guild in bot.guilds:
