@@ -2,6 +2,7 @@ import pdb
 import discord
 import json
 import textwrap
+import asyncio
 
 from collections import defaultdict
 from discord.ext import commands
@@ -354,6 +355,8 @@ class AdminValidateApiCog(commands.Cog):
                                 # Remove the roles
                                 await discord_member.remove_roles(*roles_to_remove, reason="Lack of API Key")
                                 logger.info(f'Removed roles from {discord_member.name}#{discord_member.discriminator}')
+                                # Sleep to avoid hitting rate limits
+                                await asyncio.sleep(1)
 
                     # Prepare the message content
                     message_content = ""
