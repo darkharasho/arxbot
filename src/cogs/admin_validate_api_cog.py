@@ -62,24 +62,15 @@ class AdminValidateApiCog(commands.Cog):
 
                     # Iterate over all members and count those with and without API keys
                     for member in all_members:
-                        api_keys = ApiKey.select().where(ApiKey.member == member)
-                        if api_keys.count() > 0:
-                            members_with_keys_count += 1
-                            members_with_keys_set.add(member.id)
-                        else:
-                            members_without_keys_count += 1
-                            members_without_keys_set.add(member.id)
-
-                    # Debug: Print members with and without API keys
-                    logger.info("Debug: Members with API Keys")
-                    for member_id in members_with_keys_set:
-                        member = Member.get(Member.id == member_id)
-                        logger.info(f"Member: {member.username}, Discord ID: {member.discord_id}")
-
-                    logger.info("Debug: Members without API Keys")
-                    for member_id in members_without_keys_set:
-                        member = Member.get(Member.id == member_id)
-                        logger.info(f"Member: {member.username}, Discord ID: {member.discord_id}")
+                        discord_member = interaction.guild.get_member(member.discord_id)
+                        if discord_member and discord.utils.get(discord_member.roles, name="Alliance Member"):
+                            api_keys = ApiKey.select().where(ApiKey.member == member)
+                            if api_keys.count() > 0:
+                                members_with_keys_count += 1
+                                members_with_keys_set.add(member.id)
+                            else:
+                                members_without_keys_count += 1
+                                members_without_keys_set.add(member.id)
 
                     # Create a table using tabulate
                     table = [
