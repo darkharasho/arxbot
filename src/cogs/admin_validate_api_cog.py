@@ -68,7 +68,22 @@ class AdminValidateApiCog(commands.Cog):
                 await interaction.response.defer(ephemeral=True)
 
                 # Query for members without API keys
-                members_without_keys = Member.select().join(ApiKey, JOIN.LEFT_OUTER).where(ApiKey.id.is_null())
+                members_without_keys = (Member
+                                        .select()
+                                        .join(ApiKey, JOIN.LEFT_OUTER, on=(Member.id == ApiKey.member_id))
+                                        .where(ApiKey.id.is_null()))
+
+                # Debug: Print all members and their API keys
+                print("Debug: All Members and their API Keys")
+                for member in Member.select():
+                    api_keys = ApiKey.select().where(ApiKey.member == member)
+                    print(
+                        f"Member: {member.username}, Discord ID: {member.discord_id}, API Keys: {[key.value for key in api_keys]}")
+
+                # Debug: Print members without API keys
+                print("Debug: Members without API Keys")
+                for member in members_without_keys:
+                    print(f"Member: {member.username}, Discord ID: {member.discord_id}")
 
                 # Create a table using tabulate with multiple members per row
                 rows = []
