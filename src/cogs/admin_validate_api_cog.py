@@ -69,18 +69,16 @@ class AdminValidateApiCog(commands.Cog):
                 await interaction.response.defer(ephemeral=True)
 
                 try:
-                    # Subquery to get member IDs with API keys
-                    subquery = ApiKey.select(ApiKey.member_id).distinct()
+                    # Raw SQL query to find members without API keys
+                    sql_query = """
+                        SELECT member.id, member.username, member.discord_id
+                        FROM member
+                        LEFT JOIN api_key ON member.id = api_key.member_id
+                        WHERE api_key.id IS NULL
+                    """
 
-                    # Query for members without API keys
-                    members_without_keys = Member.select().where(Member.id.not_in(subquery))
-
-                    # Debug: Print all members and their API keys
-                    logger.info("Debug: All Members and their API Keys")
-                    for member in Member.select():
-                        api_keys = ApiKey.select().where(ApiKey.member == member)
-                        logger.info(
-                            f"Member: {member.username}, Discord ID: {member.discord_id}, API Keys: {[key.value for key in api_keys]}")
+                    # Execute raw SQL query
+                    members_without_keys = RawQuery(Member, sql_query).execute()
 
                     # Debug: Print members without API keys
                     logger.info("Debug: Members without API Keys")
