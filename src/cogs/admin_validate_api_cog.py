@@ -161,6 +161,8 @@ class AdminValidateApiCog(commands.Cog):
 
                     # Dictionary to hold roles and corresponding members
                     roles_to_members = defaultdict(list)
+                    excluded_roles = {"Alliance Member", "SEA", "NA", "OCX", "Guild Leader", "Guild Officer",
+                                      "Server Booster"}
 
                     # Iterate over all members and filter those without API keys and with the "Alliance Member" role
                     guild = interaction.guild
@@ -170,7 +172,7 @@ class AdminValidateApiCog(commands.Cog):
                             api_keys = ApiKey.select().where(ApiKey.member == member)
                             if api_keys.count() == 0:
                                 for role in discord_member.roles:
-                                    if role.name != "Alliance Member" and role != guild.default_role:
+                                    if role.name not in excluded_roles and role != guild.default_role:
                                         roles_to_members[role.name].append(member.username)
 
                     # Prepare the message chunks
@@ -199,6 +201,10 @@ class AdminValidateApiCog(commands.Cog):
                     # Send the message chunks
                     for chunk in message_chunks:
                         await interaction.followup.send(chunk, ephemeral=True)
+
+                except Exception as e:
+                    logger.error(f"An error occurred: {e}")
+                    await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
 
                 except Exception as e:
                     logger.error(f"An error occurred: {e}")
