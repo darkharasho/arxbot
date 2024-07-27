@@ -42,7 +42,7 @@ class AdminValidateApiCog(commands.Cog):
         app_commands.Choice(name='❌🗝️ Without Key', value='without_key'),
         app_commands.Choice(name='Raw Without Key', value='raw_without_key'),
         app_commands.Choice(name='GW2 Map Without Key', value='gw2_map_without_key'),
-        app_commands.Choice(name='Without Alliance Member', value='without_alliance_member')
+        app_commands.Choice(name='🛠️ Fix Alliance Member Role', value='without_alliance_member')
     ])
     async def admin_validate_api(self, interaction: discord.Interaction, action: str):
         if await authorization.ensure_admin(interaction):
@@ -226,15 +226,21 @@ class AdminValidateApiCog(commands.Cog):
                 # Define the roles to check
                 roles_to_check = {"DUI", "eA", "SC", "EWW", "PUGS", "PUMP", "bad", "kD", "VIXI", "XXX"}
                 excluded_role = "Alliance Member"
+
+                # Check if the "Alliance Member" role exists, and create it if it doesn't
+                alliance_member_role = discord.utils.get(guild.roles, name=excluded_role)
+
                 # List to store matching members
                 matching_members = []
 
-                for member in interaction.guild.members:
+                for member in guild.members:
                     member_roles = {role.name for role in member.roles}
                     if member_roles.intersection(roles_to_check) and excluded_role not in member_roles:
                         role_names = [role.name for role in member.roles if role.name in roles_to_check]
                         matching_members.append(
                             f"{member.name}#{member.discriminator} - Roles: {', '.join(role_names)}")
+                        await member.add_roles(alliance_member_role)
+                        logger.info(f'Added role "{excluded_role}" to {member.name}#{member.discriminator}')
 
                 # Prepare the message chunks
                 chunk_size = 2000
