@@ -27,7 +27,7 @@ class KeysCog(commands.Cog):
         for api_key in member.api_keys:
             value = f"""
             **Server**: {api_key.api_client().world()["name"]}
-            **Rank**: {api_key.api_client().account()["wvw_rank"]}
+            **Rank**: {api_key.api_client().account()["wvw"]["rank"]}
             **Key**: 
             ```{api_key.value}```
             """
