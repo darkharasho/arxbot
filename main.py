@@ -117,5 +117,18 @@ async def on_guild_remove(guild):
     logger.info(f'Removed from guild: {guild.name} (ID: {guild.id})')
 
 
+@bot.event
+async def on_member_update(before, after):
+    added_roles = [role for role in after.roles if role not in before.roles]
+    roles_to_check = {"DUI", "eA", "SC", "EWW", "PUGS", "PUMP", "bad", "kD", "VIXI", "XXX", "Alliance Member"}
+    for role in added_roles:
+        if role.name in roles_to_check:
+            # Here you can add your code to handle the role addition
+            logger.info(f'Role {role.name} added to {after.name}#{after.discriminator}')
+            # Example: Check if the member has an API key and remove roles if they do not have one
+            Member.find_or_create(member=after, guild=after.guild)
+
+
+
 # Start the bot with your token
 bot.run(settings.TOKEN)
