@@ -194,7 +194,7 @@ class AdminValidateApiCog(commands.Cog):
 
                     for role, members in roles_to_members.items():
                         role_header = f"**{role}**\n"
-                        role_members = "\n".join(members) + "\n"
+                        role_members = "\n```".join(members) + "```\n"
                         section = role_header + role_members
                         section_length = len(section)
 
