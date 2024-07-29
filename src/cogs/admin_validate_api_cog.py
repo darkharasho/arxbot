@@ -165,27 +165,27 @@ class AdminValidateApiCog(commands.Cog):
                 await interaction.response.defer()
 
                 try:
-                    # Get the guild ID from the interaction
-                    guild_id = interaction.guild.id
-
-                    # Fetch all members for the current guild
-                    all_members = Member.select().where(Member.guild_id == guild_id)
+                    # Get the guild and the "Alliance Member" role
+                    guild = interaction.guild
+                    guild_id = guild.id
+                    alliance_member_role = discord.utils.get(guild.roles, name="Alliance Member")
 
                     # Dictionary to hold roles and corresponding members
                     roles_to_members = defaultdict(list)
                     excluded_roles = {"Alliance Member", "SEA", "NA", "OCX", "Guild Leader", "Guild Officer",
                                       "Server Booster"}
 
-                    # Iterate over all members and filter those without API keys and with the "Alliance Member" role
-                    guild = interaction.guild
+                    # Iterate over all members with the "Alliance Member" role
+                    all_members = Member.select().where(Member.guild_id == guild_id)
                     for member in all_members:
                         discord_member = guild.get_member(member.discord_id)
-                        if discord_member and discord.utils.get(discord_member.roles, name="Alliance Member"):
+                        if discord_member and alliance_member_role in discord_member.roles:
                             api_keys = ApiKey.select().where(ApiKey.member == member)
                             if api_keys.count() == 0:
+                                # Collect the roles to remove and mention the users
                                 for role in discord_member.roles:
                                     if role.name not in excluded_roles and role != guild.default_role:
-                                        roles_to_members[role.name].append(member.username)
+                                        roles_to_members[role.name].append(discord_member.username)
 
                     # Prepare the message chunks
                     message_chunks = []
@@ -332,32 +332,33 @@ class AdminValidateApiCog(commands.Cog):
                 # Defer the response to allow time for processing
                 await interaction.response.defer()
 
-                roles_to_check = {"DUI", "eA", "SC", "EWW", "PUGS", "PUMP", "bad", "kD", "VIXI", "XXX",
-                                  "Alliance Member"}
-
                 try:
                     # Get the guild and the "Alliance Member" role
                     guild = interaction.guild
+                    guild_id = guild.id
                     alliance_member_role = discord.utils.get(guild.roles, name="Alliance Member")
 
                     # Dictionary to hold roles and corresponding members
                     roles_to_members = defaultdict(list)
+                    excluded_roles = {"Alliance Member", "SEA", "NA", "OCX", "Guild Leader", "Guild Officer",
+                                      "Server Booster"}
 
                     # Iterate over all members with the "Alliance Member" role
-                    for discord_member in guild.members:
-                        if alliance_member_role in discord_member.roles:
-                            db_member = Member.find_or_create(member=discord_member, guild=guild)
-
-                            if db_member.api_keys.count() == 0:
-                                # Collect the roles to remove
-                                roles_to_remove = [role for role in discord_member.roles if role.name in roles_to_check]
-                                for role in roles_to_remove:
-                                    roles_to_members[role.name].append(discord_member.display_name)
-                                # Remove the roles
-                                await discord_member.remove_roles(*roles_to_remove, reason="Lack of API Key")
-                                logger.info(f'Removed roles from {discord_member.name}#{discord_member.discriminator}')
-                                # Sleep to avoid hitting rate limits
-                                await asyncio.sleep(1)
+                    all_members = Member.select().where(Member.guild_id == guild_id)
+                    for member in all_members:
+                        discord_member = guild.get_member(member.discord_id)
+                        if discord_member and alliance_member_role in discord_member.roles:
+                            api_keys = ApiKey.select().where(ApiKey.member == member)
+                            if api_keys.count() == 0:
+                                # Collect the roles to remove and mention the users
+                                for role in discord_member.roles:
+                                    if role.name not in excluded_roles and role != guild.default_role:
+                                        roles_to_members[role.name].append(discord_member.display_name)
+                                        # Remove the roles
+                                        await discord_member.remove_roles(*roles_to_remove, reason="Lack of API Key")
+                                        logger.info(f'Removed roles from {discord_member.name}#{discord_member.discriminator}')
+                                        # Sleep to avoid hitting rate limits
+                                        await asyncio.sleep(1)
 
                     # Prepare the message content
                     message_content = ""
