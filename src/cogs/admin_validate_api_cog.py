@@ -23,11 +23,11 @@ from src.gw2_api_client import GW2ApiClient
 tabulate.PRESERVE_WHITESPACE = True
 
 
-async def send_large_message(interaction, content, chunk_size=2000):
+async def send_large_message(interaction, content, chunk_size=2000, ephemeral=True):
     """Utility function to send large messages split into chunks."""
     chunks = textwrap.wrap(content, width=chunk_size, replace_whitespace=False)
     for chunk in chunks:
-        await interaction.followup.send(chunk, ephemeral=True)
+        await interaction.followup.send(chunk, ephemeral=ephemeral)
 
 class AdminValidateApiCog(commands.Cog):
     def __init__(self, bot):
@@ -218,7 +218,7 @@ class AdminValidateApiCog(commands.Cog):
                     await interaction.followup.send(f"An error occurred: {e}")
 
             elif action == 'gw2_map_without_key':
-                await interaction.response.defer(ephemeral=True)
+                await interaction.response.defer()
                 current_user = Member.select().where(Member.discord_id == interaction.user.id).first()
 
                 if current_user:
@@ -237,7 +237,7 @@ class AdminValidateApiCog(commands.Cog):
                     full_message = overall_count_message + member_names_str
 
                     # Send the large message split into chunks
-                    await send_large_message(interaction, full_message)
+                    await send_large_message(interaction, full_message, ephemeral=False)
             elif action == 'without_alliance_member':
                 await interaction.response.defer(ephemeral=True)
 
