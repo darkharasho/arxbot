@@ -64,6 +64,9 @@ class Member(BaseModel):
     def total_count(self):
         return self.attendances.count()
 
+    def characters(self):
+        return GW2ApiClient(api_key=self.api_key).characters()
+
     def weekly_kill_count(self):
         if not self.gw2_stats:
             return 0
