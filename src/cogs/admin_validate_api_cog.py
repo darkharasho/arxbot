@@ -186,6 +186,7 @@ class AdminValidateApiCog(commands.Cog):
                                 for role in discord_member.roles:
                                     if role.name not in excluded_roles and role != guild.default_role:
                                         roles_to_members[role.name].append(discord_member.name)
+                                        logger.info(discord_member.name)
 
                     # Prepare the message chunks
                     message_chunks = []
