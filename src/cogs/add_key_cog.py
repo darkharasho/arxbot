@@ -219,6 +219,13 @@ class AddKeyCog(commands.Cog):
     async def api_key(self, interaction, gw2_api_key: str, primary: bool = True):
         await self.process_key(interaction=interaction, gw2_api_key=gw2_api_key, primary=primary)
 
+    @app_commands.command(
+        name="alt-api-key",
+        description="Add an API key for an alt acount. Requires: account, Optional: characters, progression"
+    )
+    async def alt_api_key(self, interaction, gw2_api_key: str):
+        await self.process_key(interaction=interaction, gw2_api_key=gw2_api_key, primary=False)
+
 
 async def setup(bot):
     for guild in bot.guilds:
