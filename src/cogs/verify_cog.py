@@ -18,7 +18,7 @@ class VerifyCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.db = SqliteDatabase('arxbot.db')
-        self.verify_members.start()  # Start the scheduled task
+        # self.verify_members.start()  # Start the scheduled task
 
     # def cog_unload(self):
     #     self.verify_members.cancel()  # Stop the task when the cog is unloaded
