@@ -20,44 +20,44 @@ class VerifyCog(commands.Cog):
         self.db = SqliteDatabase('arxbot.db')
         self.verify_members.start()  # Start the scheduled task
 
-    def cog_unload(self):
-        self.verify_members.cancel()  # Stop the task when the cog is unloaded
+    # def cog_unload(self):
+    #     self.verify_members.cancel()  # Stop the task when the cog is unloaded
 
-    @tasks.loop(hours=24)
-    async def verify_members(self):
-        return
-        for guild in self.bot.guilds:
-            verify_config = Config.guild_allowed_roles(guild_id=guild.id)
-            async for member in guild.fetch_members(limit=None):
-                db_member = Member.find_or_create(member=member, guild=guild)
-                if len(db_member.api_keys) == 0:
-                    continue  # Skip members without API keys
+    # @tasks.loop(hours=24)
+    # async def verify_members(self):
+    #     return
+    #     for guild in self.bot.guilds:
+    #         verify_config = Config.guild_allowed_roles(guild_id=guild.id)
+    #         async for member in guild.fetch_members(limit=None):
+    #             db_member = Member.find_or_create(member=member, guild=guild)
+    #             if len(db_member.api_keys) == 0:
+    #                 continue  # Skip members without API keys
+    #
+    #             gw2_guild_ids = db_member.gw2_guild_ids()
+    #             roles_to_assign = []
+    #             roles_to_remove = []
+    #             for guild_mapping in verify_config["gw2_to_discord_mapping"]:
+    #                 role = discord.utils.get(guild.roles, id=int(guild_mapping['discord_role_id']))
+    #                 if guild_mapping["guild_id"] in gw2_guild_ids and role not in member.roles:
+    #                     roles_to_assign.append(role)
+    #                 if guild_mapping["guild_id"] not in gw2_guild_ids and role in member.roles:
+    #                     roles_to_remove.append(role)
+    #
+    #             try:
+    #                 if roles_to_assign:
+    #                     await member.add_roles(*roles_to_assign)
+    #                     logger.info(f"[Add Roles] - {member.name} - {', '.join(r.name for r in roles_to_assign)}")
+    #                 if roles_to_remove:
+    #                     await member.remove_roles(*roles_to_remove)
+    #                     logger.info(f"[Remove Roles] - {member.name} - {', '.join([r.name for r in roles_to_remove])}")
+    #             except discord.Forbidden:
+    #                 logger.warning(f"Failed to update roles for {member.display_name} due to missing permissions.")
+    #             except discord.HTTPException as e:
+    #                 logger.warning(f"Failed to update roles for {member.display_name} due to an error: {e}")
 
-                gw2_guild_ids = db_member.gw2_guild_ids()
-                roles_to_assign = []
-                roles_to_remove = []
-                for guild_mapping in verify_config["gw2_to_discord_mapping"]:
-                    role = discord.utils.get(guild.roles, id=int(guild_mapping['discord_role_id']))
-                    if guild_mapping["guild_id"] in gw2_guild_ids and role not in member.roles:
-                        roles_to_assign.append(role)
-                    if guild_mapping["guild_id"] not in gw2_guild_ids and role in member.roles:
-                        roles_to_remove.append(role)
-
-                try:
-                    if roles_to_assign:
-                        await member.add_roles(*roles_to_assign)
-                        logger.info(f"[Add Roles] - {member.name} - {', '.join(r.name for r in roles_to_assign)}")
-                    if roles_to_remove:
-                        await member.remove_roles(*roles_to_remove)
-                        logger.info(f"[Remove Roles] - {member.name} - {', '.join([r.name for r in roles_to_remove])}")
-                except discord.Forbidden:
-                    logger.warning(f"Failed to update roles for {member.display_name} due to missing permissions.")
-                except discord.HTTPException as e:
-                    logger.warning(f"Failed to update roles for {member.display_name} due to an error: {e}")
-
-    @verify_members.before_loop
-    async def before_verify_members(self):
-        await self.bot.wait_until_ready()
+    # @verify_members.before_loop
+    # async def before_verify_members(self):
+    #     await self.bot.wait_until_ready()
 
     @app_commands.command(
         name="verify",

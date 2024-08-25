@@ -3,7 +3,6 @@ import requests
 import datetime
 from discord.ext import commands, tasks
 from config import settings
-from src.lib.logger import logger
 from src.gw2_api_client import GW2ApiClient
 from src.models.member import Member
 from src.models.api_key import ApiKey
@@ -23,7 +22,7 @@ class StatUpdaterTask(commands.Cog):
         await self.bulk_update()
 
     async def bulk_update(self):
-        logger.info("[GW2 SYNC]".ljust(20) + f"🟢 STARTED")
+        print("[GW2 SYNC]".ljust(20) + f"🟢 STARTED")
         members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.leaderboard_enabled == True)]))
         progress = {
             "kills": False,
@@ -52,19 +51,19 @@ class StatUpdaterTask(commands.Cog):
                 progress["yaks"] = True
                 await self.update_spikes(member)
                 progress["spikes"] = True
-                logger.info("[GW2 SYNC]".ljust(20) + f"🟢 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
+                print(f"[GW2 SYNC]".ljust(20) + f"🟢 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
             except Exception as e:
-                logger.info("[GW2 SYNC]".ljust(20) + f"🔴 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
-                logger.info(" ".ljust(23) + f"[ERR] {e}")
-                logger.info(" ".ljust(23) + f"[PROGRESS] {progress}")
+                print(f"[GW2 SYNC]".ljust(20) + f"🔴 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
+                print(" ".ljust(23) + f"[ERR] {e}")
+                print(" ".ljust(23) + f"[PROGRESS] {progress}")
 
-        logger.info("[GW2 SYNC]".ljust(20) + f"🟢 DONE")
+        print("[GW2 SYNC]".ljust(20) + f"🟢 DONE")
 
     async def update_kill_count(self, member):
         member = Member.get(Member.id == member.id)
         kills = 0
         for api_key in member.api_keys:
-            avenger_stats = GW2ApiClient(api_key=api_key.value).account_achievements(name="Realm Avenger")
+            avenger_stats = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Realm Avenger")
             if avenger_stats:
                 kills += avenger_stats[0]["current"]
         await self.update(member=member, stat_name="kills", stat=kills)
@@ -73,7 +72,7 @@ class StatUpdaterTask(commands.Cog):
         member = Member.get(Member.id == member.id)
         captures = 0
         for api_key in member.api_keys:
-            conqueror = GW2ApiClient(api_key=api_key.value).account_achievements(name="Emblem of the Conqueror")
+            conqueror = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Emblem of the Conqueror")
             if conqueror:
                 captures += conqueror[0].get("current", 0) + (conqueror[0].get("repeated", 0) * 100)
         await self.update(member=member, stat_name="captures", stat=captures)
@@ -91,7 +90,7 @@ class StatUpdaterTask(commands.Cog):
         member = Member.get(Member.id == member.id)
         deaths = 0
         for api_key in member.api_keys:
-            characters = GW2ApiClient(api_key=api_key.value).characters(ids="all")
+            characters = await GW2ApiClient(api_key=api_key.value).aio_characters(ids="all")
             if characters:
                 for character in characters:
                     deaths += character["deaths"]
@@ -101,7 +100,7 @@ class StatUpdaterTask(commands.Cog):
         member = Member.get(Member.id == member.id)
         supply = 0
         for api_key in member.api_keys:
-            repair_master = GW2ApiClient(api_key=api_key.value).account_achievements(name="Repair Master")
+            repair_master = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Repair Master")
             if repair_master:
                 supply += repair_master[0]["current"]
         await self.update(member=member, stat_name="supply", stat=supply)
@@ -110,7 +109,7 @@ class StatUpdaterTask(commands.Cog):
         member = Member.get(Member.id == member.id)
         yaks = 0
         for api_key in member.api_keys:
-            yak_escorts = GW2ApiClient(api_key=api_key.value).account_achievements(name="A Pack Dolyak's Best Friend")
+            yak_escorts = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="A Pack Dolyak's Best Friend")
             if yak_escorts:
                 yaks += yak_escorts[0]["current"]
         await self.update(member=member, stat_name="yaks", stat=yaks)
