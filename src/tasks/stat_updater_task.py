@@ -3,6 +3,7 @@ import requests
 import datetime
 from discord.ext import commands, tasks
 from config import settings
+from src.lib.logger import logger
 from src.gw2_api_client import GW2ApiClient
 from src.models.member import Member
 from src.models.api_key import ApiKey
