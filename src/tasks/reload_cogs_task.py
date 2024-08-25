@@ -20,12 +20,12 @@ class ReloadCogsTask(commands.Cog):
 
     @tasks.loop(hours=1)
     async def reload_cogs(self):
-        print("[COG SYNC]".ljust(20) + f"🟢 STARTED")
+        logger.info("[COG SYNC]".ljust(20) + f"🟢 STARTED")
         try:
             await self.bot.tree.sync()
-            print("[COG SYNC]".ljust(20) + f"🟢 COMPLETE")
+            logger.info("[COG SYNC]".ljust(20) + f"🟢 COMPLETE")
         except Exception as e:
-            print("[COG SYNC]".ljust(20) + f"🔴 FAILED")
+            logger.info("[COG SYNC]".ljust(20) + f"🔴 FAILED")
             print(e)
 
 

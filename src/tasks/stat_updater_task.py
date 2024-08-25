@@ -22,7 +22,7 @@ class StatUpdaterTask(commands.Cog):
         await self.bulk_update()
 
     async def bulk_update(self):
-        print("[GW2 SYNC]".ljust(20) + f"🟢 STARTED")
+        logger.info("[GW2 SYNC]".ljust(20) + f"🟢 STARTED")
         members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.leaderboard_enabled == True)]))
         progress = {
             "kills": False,
@@ -51,13 +51,13 @@ class StatUpdaterTask(commands.Cog):
                 progress["yaks"] = True
                 await self.update_spikes(member)
                 progress["spikes"] = True
-                print(f"[GW2 SYNC]".ljust(20) + f"🟢 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
+                logger.info("[GW2 SYNC]".ljust(20) + f"🟢 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
             except Exception as e:
-                print(f"[GW2 SYNC]".ljust(20) + f"🔴 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
-                print(" ".ljust(23) + f"[ERR] {e}")
-                print(" ".ljust(23) + f"[PROGRESS] {progress}")
+                logger.info("[GW2 SYNC]".ljust(20) + f"🔴 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
+                logger.info(" ".ljust(23) + f"[ERR] {e}")
+                logger.info(" ".ljust(23) + f"[PROGRESS] {progress}")
 
-        print("[GW2 SYNC]".ljust(20) + f"🟢 DONE")
+        logger.info("[GW2 SYNC]".ljust(20) + f"🟢 DONE")
 
     async def update_kill_count(self, member):
         member = Member.get(Member.id == member.id)
