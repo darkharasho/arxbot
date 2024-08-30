@@ -4,6 +4,8 @@ from discord import app_commands
 from src import authorization
 from src.models.member import Member
 
+MAX_EMBED_FIELDS = 25  # Discord allows up to 25 fields per embed
+
 
 class AdminGuildLookup(commands.Cog):
     def __init__(self, bot):
@@ -24,10 +26,13 @@ class AdminGuildLookup(commands.Cog):
                 await interaction.followup.send(f"No members found with the role {role.name}.", ephemeral=True)
                 return
 
-            embed = discord.Embed(
+            # Prepare to create multiple embeds if necessary
+            embeds = []
+            current_embed = discord.Embed(
                 title=f"Members with Role: {role.name}",
                 description=f"Listing members with the role {role.name} and their GW2 account names if available."
             )
+            field_count = 0
 
             for member in members_with_role:
                 db_member = Member.find_or_create(member=member, guild=interaction.guild)
@@ -35,13 +40,29 @@ class AdminGuildLookup(commands.Cog):
                     "No API Key"]
                 gw2_accounts_str = "\n- ".join(gw2_accounts)
 
-                embed.add_field(
+                current_embed.add_field(
                     name=f"{member.display_name} ({member.name})",
                     value=f"GW2 Accounts: ```- {gw2_accounts_str}```",
                     inline=False
                 )
+                field_count += 1
 
-            await interaction.followup.send(embed=embed, ephemeral=True)
+                # Check if the current embed is full
+                if field_count >= MAX_EMBED_FIELDS:
+                    embeds.append(current_embed)
+                    current_embed = discord.Embed(
+                        title=f"Members with Role: {role.name}",
+                        description=f"Continuing list of members with the role {role.name} and their GW2 account names."
+                    )
+                    field_count = 0
+
+            # Append any remaining fields
+            if field_count > 0:
+                embeds.append(current_embed)
+
+            # Send the embeds one by one
+            for embed in embeds:
+                await interaction.followup.send(embed=embed, ephemeral=True)
 
 
 async def setup(bot):
