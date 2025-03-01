@@ -22,6 +22,16 @@ class GW2ApiClient:
         with open("api_achievements_map.json", 'r') as json_file:
             self.api_achievements_map = json.load(json_file)
 
+    def execute(self, endpoint: str):
+        ping_url = self.url + endpoint
+        response = requests.get(ping_url, headers=self.headers)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            return json.loads(response.text)
+        else:
+            print(f"Request failed with status code {response.status_code}")
+
     def account(self):
         ping_url = self.url + "/account"
         response = requests.get(ping_url, headers=self.headers)
