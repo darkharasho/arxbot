@@ -172,7 +172,7 @@ class AdminValidateApiCog(commands.Cog):
 
                     # Dictionary to hold roles and corresponding members
                     roles_to_members = defaultdict(list)
-                    excluded_roles = {"Alliance Member", "SEA", "NA", "OCX", "Guild Leader", "Guild Officer",
+                    excluded_roles = {"Guild Leader", "Guild Officer",
                                       "Server Booster"}
 
                     # Iterate over all members and filter those without API keys and with the "Alliance Member" role
