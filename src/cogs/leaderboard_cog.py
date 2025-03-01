@@ -20,7 +20,7 @@ async def calculate_leaderboard(name, data, guild):
         try:
             leaderboard.append([member.username, member.gw2_name(), getattr(member, data)()])
         except Exception as e:
-            print(f"Skipping {num} due to error: {e}")
+            print(f"Skipping {member.username} due to error: {e}")
             continue  # Gracefully skip this iteration
     sorted_leaderboard = sorted(leaderboard, key=lambda x: x[2], reverse=True)
     index = [i for i in range(1, len(sorted_leaderboard[:settings.MAX_LEADERBOARD_MEMBERS]) + 1)]
