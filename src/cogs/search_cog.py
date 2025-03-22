@@ -1,6 +1,7 @@
 import pdb
 import discord
 import json
+import logging
 
 from discord.ext import commands
 from discord import app_commands
@@ -66,7 +67,7 @@ class SearchCog(commands.Cog):
 
                 await interaction.followup.send(embed=embed, ephemeral=True)
             except Exception as e:
-                logger.info(f'{e}')
+                logging.critical(e, exc_info=True)
                 await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
 
 
