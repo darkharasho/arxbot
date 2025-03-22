@@ -16,6 +16,7 @@ from src.cogs.stats_cog import StatsCog
 from datetime import datetime
 from src.db_viewer import DBViewer
 from src.lib.smart_embed import SmartEmbed
+from src.lib.logger import logger
 
 tabulate.PRESERVE_WHITESPACE = True
 
@@ -54,6 +55,9 @@ class SearchCog(commands.Cog):
                                                        "\n".join(apik.name for apik in api_key.member.api_keys)
                                                        + "```", inline=False)
                         embed.add_field(name="", value="```------ Character Details ------```", inline=False)
+                        embed.add_field(name="Guilds", value="```" +
+                                                                 "\n".join(char for char in api_key.member.gw2_guild_names())
+                                                                 + "```", inline=False)
                         embed.add_field(name="Characters", value="```" +
                                                                  "\n".join(char for char in api_key.member.characters())
                                                                  + "```", inline=False)
@@ -62,7 +66,9 @@ class SearchCog(commands.Cog):
 
                 await interaction.followup.send(embed=embed, ephemeral=True)
             except Exception as e:
+                logger.info(f'{e}')
                 await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
+
 
 
 async def setup(bot):
