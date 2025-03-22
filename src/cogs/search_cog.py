@@ -64,7 +64,7 @@ class SearchCog(commands.Cog):
                                                                  "\n".join(char for char in api_key.member.characters())
                                                                  + "```", inline=False)
                         except Exception as e:
-                            embed.add_field(name="Characters", value="```\n```", inline=False)
+                            embed.add_field(name="Characters", value="```---```", inline=False)
                 else:
                     embed = discord.Embed(title="No results found.")
 
