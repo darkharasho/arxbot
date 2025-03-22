@@ -59,9 +59,12 @@ class SearchCog(commands.Cog):
                         embed.add_field(name="Guilds", value="```" +
                                                                  "\n".join(char for char in api_key.member.gw2_guild_names())
                                                                  + "```", inline=False)
-                        embed.add_field(name="Characters", value="```" +
+                        try:
+                            embed.add_field(name="Characters", value="```" +
                                                                  "\n".join(char for char in api_key.member.characters())
                                                                  + "```", inline=False)
+                        except Exception as e:
+                            embed.add_field(name="Characters", value="```\n```", inline=False)
                 else:
                     embed = discord.Embed(title="No results found.")
 
