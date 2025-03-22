@@ -51,9 +51,9 @@ class SearchCog(commands.Cog):
                         member = interaction.guild.get_member(api_key.member.discord_id)
                         try:
                             embed = discord.Embed(title=f"{member.display_name} | {member.name}", description="")
+                            embed.set_thumbnail(url=member.display_avatar.url)
                         except Exception as e:
                             embed = discord.Embed(title=f"N/A - Left discord", description="")
-                        embed.set_thumbnail(url=member.display_avatar.url)
                         embed.add_field(name="", value="```------ Accounts ------```", inline=False)
                         embed.add_field(name="", value=f"```" +
                                                        "\n".join(apik.name for apik in api_key.member.api_keys)
