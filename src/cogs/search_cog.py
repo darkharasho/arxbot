@@ -49,7 +49,10 @@ class SearchCog(commands.Cog):
                 if results:
                     for api_key in results:
                         member = interaction.guild.get_member(api_key.member.discord_id)
-                        embed = discord.Embed(title=f"{member.display_name} | {member.name}", description="")
+                        try:
+                            embed = discord.Embed(title=f"{member.display_name} | {member.name}", description="")
+                        except Exception as e:
+                            embed = discord.Embed(title=f"{member.name}", description="")
                         embed.set_thumbnail(url=member.display_avatar.url)
                         embed.add_field(name="", value="```------ Accounts ------```", inline=False)
                         embed.add_field(name="", value=f"```" +
