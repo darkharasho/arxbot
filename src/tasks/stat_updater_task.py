@@ -24,10 +24,21 @@ class StatUpdaterTask(commands.Cog):
         logger.info("[GW2 SYNC] 🟢 DONE")
 
     async def bulk_update(self):
+        guild = self.bot.get_guild(settings.GUILD_ID)  # Replace with your guild ID
+        if not guild:
+            logger.error("[GW2 SYNC] 🔴 Guild not found. Check GUILD_ID in settings.")
+            return
+
+        # Prefetch all members with their roles
+        all_members = {member.id: member for member in guild.members if "Alliance Member" in [role.name for role in member.roles]}
         members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.leaderboard_enabled == True)]))
         total_members = len(members)
 
         for index, member in enumerate(members, start=1):
+            if member.discord_id not in all_members:
+                logger.info(f"[GW2 SYNC] ⚪ Skipping {member.username} (not an Alliance Member)")
+                continue
+
             start_time = datetime.datetime.now()
             try:
                 # Run all stat updates in parallel for the member
