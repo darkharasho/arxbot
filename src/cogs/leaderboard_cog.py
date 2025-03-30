@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)  # Set the logging level (e.g., DEBUG, I
 async def calculate_leaderboard(name, data, guild):
     # Optimize query to fetch only required fields and related members
     query = (
-        ApiKey.select(ApiKey.member, Member.username, Member.gw2_username)
+        ApiKey.select(ApiKey.member, Member.username, Member.gw2_username, Member.discord_id)
         .join(Member)
         .where((ApiKey.guild_id == guild.id))
     )
@@ -37,7 +37,7 @@ async def calculate_leaderboard(name, data, guild):
 
         try:
             # Fetch the Discord member object from the API
-            discord_member = await guild.fetch_member(f"{member.discord_id}")
+            discord_member = await guild.fetch_member(member.discord_id)
         except discord.NotFound:
             logger.info(f"Skipping {member.username} {member.discord_id}: Discord member not found.")
             continue
