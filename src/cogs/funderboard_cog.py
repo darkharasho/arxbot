@@ -7,6 +7,7 @@ from config import settings
 from tabulate import tabulate
 from src.models.member import Member
 from src.models.api_key import ApiKey
+from peewee import SqliteDatabase  # Import SqliteDatabase
 
 tabulate.PRESERVE_WHITESPACE = True
 
@@ -72,7 +73,7 @@ async def calculate_leaderboard(name, data, guild_id, guild):
 class FunderboardCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = SqliteDatabase('arxbot.db')
+        self.db = SqliteDatabase('arxbot.db')  # Initialize the database
 
     @app_commands.command(
         name="funderboard",
