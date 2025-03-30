@@ -24,6 +24,7 @@ async def calculate_leaderboard(name, data, guild):
 
     leaderboard = []
     alliance_role = discord.utils.get(guild.roles, name="Alliance Member")  # Get the "Alliance Member" role
+    print(f"Alliance role: {alliance_role}")
 
     for api_key in query:
         member = api_key.member
