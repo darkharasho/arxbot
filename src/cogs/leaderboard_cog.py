@@ -37,7 +37,7 @@ async def calculate_leaderboard(name, data, guild):
 
         try:
             # Fetch the Discord member object from the API
-            discord_member = await guild.fetch_member(member.discord_id)
+            discord_member = await guild.fetch_member(f"{member.discord_id}")
         except discord.NotFound:
             logger.info(f"Skipping {member.username} {member.discord_id}: Discord member not found.")
             continue
