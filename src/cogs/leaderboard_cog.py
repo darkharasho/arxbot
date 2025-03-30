@@ -33,13 +33,21 @@ async def calculate_leaderboard(name, data, guild):
 
     for api_key in query:
         member = api_key.member
-        discord_member = guild.get_member(member.discord_id)  # Get the Discord member object
-        logger.debug(f"Discord Member for {member.username}: {discord_member}")  # Debugging
+        logger.debug(f"Checking Discord ID for {member.username}: {member.discord_id}")
 
-        # Skip if the Discord member does not exist or does not have the "Alliance Member" role
-        if not discord_member:
+        try:
+            # Fetch the Discord member object from the API
+            discord_member = await guild.fetch_member(member.discord_id)
+        except discord.NotFound:
             logger.info(f"Skipping {member.username} {member.discord_id}: Discord member not found.")
             continue
+        except discord.HTTPException as e:
+            logger.error(f"Error fetching member {member.username} ({member.discord_id}): {e}")
+            continue
+
+        logger.debug(f"Discord Member for {member.username}: {discord_member}")
+
+        # Skip if the Discord member does not have the "Alliance Member" role
         if alliance_role not in discord_member.roles:
             logger.info(f"Skipping {member.username}: Does not have the 'Alliance Member' role.")
             continue
