@@ -17,7 +17,7 @@ tabulate.PRESERVE_WHITESPACE = True
 async def calculate_leaderboard(name, data, guild):
     # Optimize query to fetch only required fields and related members
     query = (
-        ApiKey.select(ApiKey.member, Member.username, Member.guild_wars_2_name)
+        ApiKey.select(ApiKey.member, Member.username, Member.gw2_username)  # Use the correct attribute name
         .join(Member)
         .where((ApiKey.guild_id == guild.id) & (ApiKey.leaderboard_enabled == True))
     )
@@ -27,7 +27,7 @@ async def calculate_leaderboard(name, data, guild):
         member = api_key.member
         try:
             # Fetch the required data dynamically
-            leaderboard.append([member.username, member.guild_wars_2_name, getattr(member, data)()])
+            leaderboard.append([member.username, member.gw2_username, getattr(member, data)()])  # Use the correct attribute name
         except Exception as e:
             print(f"Skipping {member.username} due to error: {e}")
             continue  # Gracefully skip this iteration
