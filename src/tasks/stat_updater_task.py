@@ -24,32 +24,40 @@ class StatUpdaterTask(commands.Cog):
         logger.info("[GW2 SYNC] 🟢 DONE")
 
     async def bulk_update(self):
-        # Prefetch all members with their roles
-        all_members = {member.id: member for member in guild.members if "Alliance Member" in [role.name for role in member.roles]}
-        members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.leaderboard_enabled == True)]))
-        total_members = len(members)
+        for guild in self.bot.guilds:  # Iterate over all guilds the bot is in
+            logger.info(f"[GW2 SYNC] Processing guild: {guild.name} (ID: {guild.id})")
 
-        for index, member in enumerate(members, start=1):
-            if member.discord_id not in all_members:
-                logger.info(f"[GW2 SYNC] ⚪ Skipping {member.username} (not an Alliance Member)")
+            # Prefetch all members with their roles for the current guild
+            all_members = {member.id: member for member in guild.members if "Alliance Member" in [role.name for role in member.roles]}
+            if not all_members:
+                logger.info(f"[GW2 SYNC] No 'Alliance Member' roles found in guild: {guild.name}")
                 continue
 
-            start_time = datetime.datetime.now()
-            try:
-                # Run all stat updates in parallel for the member
-                await asyncio.gather(
-                    self.update_kill_count(member),
-                    self.update_capture_count(member),
-                    self.update_rank_count(member),
-                    self.update_deaths_count(member),
-                    self.update_supply_spent(member),
-                    self.update_yaks_escorted(member),
-                    self.update_spikes(member),
-                )
-                logger.info(f"[GW2 SYNC] 🟢 ({index}/{total_members}) {member.username}: {datetime.datetime.now() - start_time}")
-            except Exception as e:
-                logger.error(f"[GW2 SYNC] 🔴 ({index}/{total_members}) {member.username}: {datetime.datetime.now() - start_time}")
-                logger.error(f"    [ERR] {e}")
+            # Fetch members with leaderboard enabled
+            members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.leaderboard_enabled == True)]))
+            total_members = len(members)
+
+            for index, member in enumerate(members, start=1):
+                if member.discord_id not in all_members:
+                    logger.info(f"[GW2 SYNC] ⚪ Skipping {member.username} (not an Alliance Member in guild {guild.name})")
+                    continue
+
+                start_time = datetime.datetime.now()
+                try:
+                    # Run all stat updates in parallel for the member
+                    await asyncio.gather(
+                        self.update_kill_count(member),
+                        self.update_capture_count(member),
+                        self.update_rank_count(member),
+                        self.update_deaths_count(member),
+                        self.update_supply_spent(member),
+                        self.update_yaks_escorted(member),
+                        self.update_spikes(member),
+                    )
+                    logger.info(f"[GW2 SYNC] 🟢 ({index}/{total_members}) {member.username}: {datetime.datetime.now() - start_time}")
+                except Exception as e:
+                    logger.error(f"[GW2 SYNC] 🔴 ({index}/{total_members}) {member.username}: {datetime.datetime.now() - start_time}")
+                    logger.error(f"    [ERR] {e}")
 
     async def update_kill_count(self, member):
         try:
