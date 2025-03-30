@@ -14,25 +14,30 @@ tabulate.PRESERVE_WHITESPACE = True
 
 
 async def calculate_leaderboard(name, data, guild):
-    members = list(set([api_key.member for api_key in ApiKey.select().where((ApiKey.guild_id == guild.id) & (ApiKey.leaderboard_enabled == True))]))
+    # Optimize query to fetch only required fields and related members
+    query = (
+        ApiKey.select(ApiKey.member, Member.username, Member.guild_wars_2_name)
+        .join(Member)
+        .where((ApiKey.guild_id == guild.id) & (ApiKey.leaderboard_enabled == True))
+    )
+
     leaderboard = []
-    for member in members:
+    for api_key in query:
+        member = api_key.member
         try:
-            leaderboard.append([member.username, member.gw2_name(), getattr(member, data)()])
+            # Fetch the required data dynamically
+            leaderboard.append([member.username, member.guild_wars_2_name, getattr(member, data)()])
         except Exception as e:
             print(f"Skipping {member.username} due to error: {e}")
             continue  # Gracefully skip this iteration
-    sorted_leaderboard = sorted(leaderboard, key=lambda x: x[2], reverse=True)
-    index = [i for i in range(1, len(sorted_leaderboard[:settings.MAX_LEADERBOARD_MEMBERS]) + 1)]
 
-    tablefmt = "simple"
+    # Sort and limit results directly in Python
+    sorted_leaderboard = sorted(leaderboard, key=lambda x: x[2], reverse=True)[:settings.MAX_LEADERBOARD_MEMBERS]
+    index = range(1, len(sorted_leaderboard) + 1)
+
+    # Generate the table
     headers = ["Name", "GW2 Username", f"{name}"]
-    table = tabulate(
-        sorted_leaderboard[:settings.MAX_LEADERBOARD_MEMBERS],
-        headers,
-        tablefmt=tablefmt,
-        showindex=index
-    )
+    table = tabulate(sorted_leaderboard, headers, tablefmt="simple", showindex=index)
 
     return table
 
@@ -48,10 +53,15 @@ class LeaderboardCog(commands.Cog):
     )
     async def leaderboard(self, interaction):
         await interaction.response.defer()
-        kill_table = await calculate_leaderboard("Kills", "weekly_kill_count", interaction.guild)
-        kdr_table = await calculate_leaderboard("KDR", "weekly_kdr", interaction.guild)
-        capture_table = await calculate_leaderboard("Captures", "weekly_capture_count", interaction.guild)
 
+        # Run leaderboard calculations in parallel
+        kill_table, kdr_table, capture_table = await asyncio.gather(
+            calculate_leaderboard("Kills", "weekly_kill_count", interaction.guild),
+            calculate_leaderboard("KDR", "weekly_kdr", interaction.guild),
+            calculate_leaderboard("Captures", "weekly_capture_count", interaction.guild),
+        )
+
+        # Create and send the embed
         embed = discord.Embed(
             title="📊 Weekly Leaderboard",
             description=f"〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️"
