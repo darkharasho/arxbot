@@ -33,7 +33,7 @@ async def calculate_leaderboard(name, data, guild):
 
     for api_key in query:
         member = api_key.member
-        discord_member = guild.get_member(member.discord_id)  # Get the Discord member object
+        discord_member = guild.get_member(int(member.discord_id))  # Get the Discord member object
         logger.debug(f"Discord Member for {member.username}: {discord_member}")  # Debugging
 
         # Skip if the Discord member does not exist or does not have the "Alliance Member" role
