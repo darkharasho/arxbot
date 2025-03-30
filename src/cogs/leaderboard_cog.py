@@ -1,3 +1,4 @@
+import logging
 import discord
 import asyncio  # Import asyncio to use asyncio.gather
 
@@ -13,6 +14,10 @@ from src.models.member import Member
 from src.models.api_key import ApiKey
 tabulate.PRESERVE_WHITESPACE = True
 
+# Configure the logger
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)  # Set the logging level (e.g., DEBUG, INFO, WARNING, ERROR)
+
 
 async def calculate_leaderboard(name, data, guild):
     # Optimize query to fetch only required fields and related members
@@ -24,26 +29,26 @@ async def calculate_leaderboard(name, data, guild):
 
     leaderboard = []
     alliance_role = discord.utils.get(guild.roles, name="Alliance Member")  # Get the "Alliance Member" role
-    print(f"Alliance Role: {alliance_role}")  # Debugging
+    logger.debug(f"Alliance Role: {alliance_role}")  # Debugging
 
     for api_key in query:
         member = api_key.member
         discord_member = guild.get_member(member.discord_id)  # Get the Discord member object
-        print(f"Discord Member for {member.username}: {discord_member}")  # Debugging
+        logger.debug(f"Discord Member for {member.username}: {discord_member}")  # Debugging
 
         # Skip if the Discord member does not exist or does not have the "Alliance Member" role
         if not discord_member:
-            print(f"Skipping {member.username}: Discord member not found.")
+            logger.info(f"Skipping {member.username}: Discord member not found.")
             continue
         if alliance_role not in discord_member.roles:
-            print(f"Skipping {member.username}: Does not have the 'Alliance Member' role.")
+            logger.info(f"Skipping {member.username}: Does not have the 'Alliance Member' role.")
             continue
 
         try:
             # Fetch the required data dynamically
             leaderboard.append([member.username, member.gw2_username, getattr(member, data)()])
         except Exception as e:
-            print(f"Skipping {member.username} due to error: {e}")
+            logger.error(f"Skipping {member.username} due to error: {e}")
             continue  # Gracefully skip this iteration
 
     # Sort and limit results directly in Python
