@@ -24,13 +24,19 @@ async def calculate_leaderboard(name, data, guild):
 
     leaderboard = []
     alliance_role = discord.utils.get(guild.roles, name="Alliance Member")  # Get the "Alliance Member" role
+    print(f"Alliance Role: {alliance_role}")  # Debugging
 
     for api_key in query:
         member = api_key.member
         discord_member = guild.get_member(member.discord_id)  # Get the Discord member object
+        print(f"Discord Member for {member.username}: {discord_member}")  # Debugging
 
         # Skip if the Discord member does not exist or does not have the "Alliance Member" role
-        if not discord_member or alliance_role not in discord_member.roles:
+        if not discord_member:
+            print(f"Skipping {member.username}: Discord member not found.")
+            continue
+        if alliance_role not in discord_member.roles:
+            print(f"Skipping {member.username}: Does not have the 'Alliance Member' role.")
             continue
 
         try:
