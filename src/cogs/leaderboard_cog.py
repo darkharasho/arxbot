@@ -17,17 +17,25 @@ tabulate.PRESERVE_WHITESPACE = True
 async def calculate_leaderboard(name, data, guild):
     # Optimize query to fetch only required fields and related members
     query = (
-        ApiKey.select(ApiKey.member, Member.username, Member.gw2_username)  # Use the correct attribute name
+        ApiKey.select(ApiKey.member, Member.username, Member.gw2_username)
         .join(Member)
         .where((ApiKey.guild_id == guild.id) & (ApiKey.leaderboard_enabled == True))
     )
 
     leaderboard = []
+    alliance_role = discord.utils.get(guild.roles, name="Alliance Member")  # Get the "Alliance Member" role
+
     for api_key in query:
         member = api_key.member
+        discord_member = guild.get_member(member.discord_id)  # Get the Discord member object
+
+        # Skip if the Discord member does not exist or does not have the "Alliance Member" role
+        if not discord_member or alliance_role not in discord_member.roles:
+            continue
+
         try:
             # Fetch the required data dynamically
-            leaderboard.append([member.username, member.gw2_username, getattr(member, data)()])  # Use the correct attribute name
+            leaderboard.append([member.username, member.gw2_username, getattr(member, data)()])
         except Exception as e:
             print(f"Skipping {member.username} due to error: {e}")
             continue  # Gracefully skip this iteration
