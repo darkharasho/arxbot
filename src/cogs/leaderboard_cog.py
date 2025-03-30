@@ -27,7 +27,7 @@ async def calculate_leaderboard(name, data, guild):
         .where((ApiKey.guild_id == guild.id))
     )
 
-    leaderboard = []
+    leaderboard = {}
     alliance_role = discord.utils.get(guild.roles, name="Alliance Member")  # Get the "Alliance Member" role
 
     # Create a dictionary of cached members for quick lookup
@@ -49,19 +49,33 @@ async def calculate_leaderboard(name, data, guild):
         if alliance_role not in discord_member.roles:
             continue
 
+        # Ensure the member has the required attribute or method
+        if not hasattr(member, data):
+            continue
+
         try:
             # Fetch the required data dynamically
-            leaderboard.append([member.username, member.gw2_username, getattr(member, data)()])
+            value = getattr(member, data)()
+
+            # Add to leaderboard only if the gw2_username is not already present
+            if member.gw2_username not in leaderboard:
+                leaderboard[member.gw2_username] = [member.username, member.gw2_username, value]
         except Exception:
             continue  # Gracefully skip this iteration
 
-    # Sort and limit results directly in Python
-    sorted_leaderboard = sorted(leaderboard, key=lambda x: x[2], reverse=True)[:settings.MAX_LEADERBOARD_MEMBERS]
+    # Convert the leaderboard dictionary to a list and sort it
+    sorted_leaderboard = sorted(leaderboard.values(), key=lambda x: x[2], reverse=True)[:settings.MAX_LEADERBOARD_MEMBERS]
     index = range(1, len(sorted_leaderboard) + 1)
 
     # Generate the table
     headers = ["Name", "GW2 Username", f"{name}"]
-    table = tabulate(sorted_leaderboard, headers, tablefmt="simple", showindex=index)
+    table = tabulate(
+        sorted_leaderboard,
+        headers,
+        tablefmt="simple",
+        showindex=index,
+        maxcolwidths=[23, 23, None]
+    )
 
     return table
 
