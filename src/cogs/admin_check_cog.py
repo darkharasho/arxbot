@@ -58,11 +58,12 @@ class AdminCheckCog(commands.Cog):
                 if isinstance(gw2_stats, str):
                     gw2_stats = json.loads(gw2_stats)
 
+                # Convert datetime objects to strings
                 db_member_dict = {
                     'ID': db_member.id,
                     'Username': db_member.username,
-                    'Created At': db_member.created_at,
-                    'Updated At': db_member.updated_at,
+                    'Created At': db_member.created_at.strftime("%Y-%m-%d %H:%M:%S"),  # Convert to string
+                    'Updated At': db_member.updated_at.strftime("%Y-%m-%d %H:%M:%S") if db_member.updated_at else None,  # Convert to string
                     'DiscordID': db_member.discord_id,
                     'GW2 API Key': api_keys,  # Use the list of dictionaries
                     'GW2 Stats': gw2_stats if gw2_stats else {}  # Use gw2_stats directly if it's already a dict
