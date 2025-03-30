@@ -31,18 +31,22 @@ async def calculate_leaderboard(name, data, guild):
     alliance_role = discord.utils.get(guild.roles, name="Alliance Member")  # Get the "Alliance Member" role
     logger.debug(f"Alliance Role: {alliance_role}")  # Debugging
 
+    # Create a dictionary of cached members for quick lookup
+    cached_members = {member.id: member for member in guild.members}
+
     for api_key in query:
         member = api_key.member
         logger.debug(f"Checking Discord ID for {member.username}: {member.discord_id}")
 
-        try:
-            # Fetch the Discord member object from the API
-            discord_member = await guild.fetch_member(member.discord_id)
-        except discord.NotFound:
-            logger.info(f"Skipping {member.username} {member.discord_id}: Discord member not found.")
+        # Skip if discord_id is missing
+        if not member.discord_id:
+            logger.warning(f"Skipping {member.username}: Discord ID is missing.")
             continue
-        except discord.HTTPException as e:
-            logger.error(f"Error fetching member {member.username} ({member.discord_id}): {e}")
+
+        # Use the cached member instead of fetching from the API
+        discord_member = cached_members.get(member.discord_id)
+        if not discord_member:
+            logger.info(f"Skipping {member.username} {member.discord_id}: Discord member not found in cache.")
             continue
 
         logger.debug(f"Discord Member for {member.username}: {discord_member}")
