@@ -1,6 +1,8 @@
 import pdb
 
 import discord
+import asyncio  # Import asyncio to use asyncio.gather
+
 from discord.ext import commands
 from discord import app_commands
 from config import settings
