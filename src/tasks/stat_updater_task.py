@@ -6,6 +6,7 @@ from config import settings
 from src.gw2_api_client import GW2ApiClient
 from src.models.member import Member
 from src.models.api_key import ApiKey
+from src.lib.logger import logger
 
 
 class StatUpdaterTask(commands.Cog):
@@ -18,9 +19,9 @@ class StatUpdaterTask(commands.Cog):
 
     @tasks.loop(minutes=45.0)
     async def update_stats(self):
-        print("[GW2 SYNC] 🟢 STARTED")
+        logger.info("[GW2 SYNC] 🟢 STARTED")
         await self.bulk_update()
-        print("[GW2 SYNC] 🟢 DONE")
+        logger.info("[GW2 SYNC] 🟢 DONE")
 
     async def bulk_update(self):
         members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.leaderboard_enabled == True)]))
@@ -39,10 +40,10 @@ class StatUpdaterTask(commands.Cog):
                     self.update_yaks_escorted(member),
                     self.update_spikes(member),
                 )
-                print(f"[GW2 SYNC] 🟢 ({index}/{total_members}) {member.username}: {datetime.datetime.now() - start_time}")
+                logger.info(f"[GW2 SYNC] 🟢 ({index}/{total_members}) {member.username}: {datetime.datetime.now() - start_time}")
             except Exception as e:
-                print(f"[GW2 SYNC] 🔴 ({index}/{total_members}) {member.username}: {datetime.datetime.now() - start_time}")
-                print(f"    [ERR] {e}")
+                logger.error(f"[GW2 SYNC] 🔴 ({index}/{total_members}) {member.username}: {datetime.datetime.now() - start_time}")
+                logger.error(f"    [ERR] {e}")
 
     async def update_kill_count(self, member):
         try:
@@ -53,7 +54,7 @@ class StatUpdaterTask(commands.Cog):
                     kills += avenger_stats[0]["current"]
             await self.update_stat(member, "kills", kills)
         except Exception as e:
-            print(f"    [ERR] Failed to update kills for {member.username}: {e}")
+            logger.error(f"    [ERR] Failed to update kills for {member.username}: {e}")
 
     async def update_capture_count(self, member):
         try:
@@ -64,7 +65,7 @@ class StatUpdaterTask(commands.Cog):
                     captures += conqueror[0].get("current", 0) + (conqueror[0].get("repeated", 0) * 100)
             await self.update_stat(member, "captures", captures)
         except Exception as e:
-            print(f"    [ERR] Failed to update captures for {member.username}: {e}")
+            logger.error(f"    [ERR] Failed to update captures for {member.username}: {e}")
 
     async def update_rank_count(self, member):
         try:
@@ -75,7 +76,7 @@ class StatUpdaterTask(commands.Cog):
                     wvw_ranks += account["wvw"]["rank"]
             await self.update_stat(member, "wvw_ranks", wvw_ranks)
         except Exception as e:
-            print(f"    [ERR] Failed to update ranks for {member.username}: {e}")
+            logger.error(f"    [ERR] Failed to update ranks for {member.username}: {e}")
 
     async def update_deaths_count(self, member):
         try:
@@ -87,7 +88,7 @@ class StatUpdaterTask(commands.Cog):
                         deaths += character["deaths"]
             await self.update_stat(member, "deaths", deaths)
         except Exception as e:
-            print(f"    [ERR] Failed to update deaths for {member.username}: {e}")
+            logger.error(f"    [ERR] Failed to update deaths for {member.username}: {e}")
 
     async def update_supply_spent(self, member):
         try:
@@ -98,7 +99,7 @@ class StatUpdaterTask(commands.Cog):
                     supply += repair_master[0]["current"]
             await self.update_stat(member, "supply", supply)
         except Exception as e:
-            print(f"    [ERR] Failed to update supply for {member.username}: {e}")
+            logger.error(f"    [ERR] Failed to update supply for {member.username}: {e}")
 
     async def update_yaks_escorted(self, member):
         try:
@@ -109,7 +110,7 @@ class StatUpdaterTask(commands.Cog):
                     yaks += yak_escorts[0]["current"]
             await self.update_stat(member, "yaks", yaks)
         except Exception as e:
-            print(f"    [ERR] Failed to update yaks for {member.username}: {e}")
+            logger.error(f"    [ERR] Failed to update yaks for {member.username}: {e}")
 
     async def update_spikes(self, member):
         try:
@@ -123,7 +124,7 @@ class StatUpdaterTask(commands.Cog):
                             count += item["count"]
             await self.update_stat(member, "legendary_spikes", count, single_mode=True)
         except Exception as e:
-            print(f"    [ERR] Failed to update spikes for {member.username}: {e}")
+            logger.error(f"    [ERR] Failed to update spikes for {member.username}: {e}")
 
     @staticmethod
     async def update_stat(member, stat_name, stat, single_mode=False):
@@ -138,7 +139,7 @@ class StatUpdaterTask(commands.Cog):
                 }
             Member.update(gw2_stats=stats, updated_at=datetime.datetime.now()).where(Member.id == member.id).execute()
         except Exception as e:
-            print(f"    [ERR] Failed to update database for {member.username} ({stat_name}): {e}")
+            logger.error(f"    [ERR] Failed to update database for {member.username} ({stat_name}): {e}")
 
 
 async def setup(bot):
