@@ -22,7 +22,7 @@ async def calculate_leaderboard(name, data, guild_id, guild):
         .where((ApiKey.guild_id == guild_id) & (ApiKey.leaderboard_enabled == True))
     )
 
-    leaderboard = []
+    leaderboard = {}
     alliance_role = discord.utils.get(guild.roles, name="Alliance Member")  # Get the "Alliance Member" role
 
     # Create a dictionary of cached members for quick lookup
@@ -51,12 +51,15 @@ async def calculate_leaderboard(name, data, guild_id, guild):
         try:
             # Fetch the required data dynamically
             value = getattr(member, data)()
-            leaderboard.append([member.username, member.gw2_username, value])
+
+            # Add to leaderboard only if the username is not already present
+            if member.username not in leaderboard:
+                leaderboard[member.username] = [member.username, member.gw2_username, value]
         except Exception:
             continue  # Gracefully skip this iteration
 
-    # Sort and limit results directly in Python
-    sorted_leaderboard = sorted(leaderboard, key=lambda x: x[2], reverse=True)[:settings.MAX_LEADERBOARD_MEMBERS]
+    # Convert the leaderboard dictionary to a list and sort it
+    sorted_leaderboard = sorted(leaderboard.values(), key=lambda x: x[2], reverse=True)[:settings.MAX_LEADERBOARD_MEMBERS]
     index = range(1, len(sorted_leaderboard) + 1)
 
     # Generate the table
