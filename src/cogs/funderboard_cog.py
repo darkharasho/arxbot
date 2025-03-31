@@ -66,7 +66,11 @@ async def calculate_leaderboard(name, data, guild_id, guild):
         leaderboard[".harasho"] = [".harasho", "Unknown GW2 Username", "∞"]
 
     # Convert the leaderboard dictionary to a list and sort it
-    sorted_leaderboard = sorted(leaderboard.values(), key=lambda x: x[2], reverse=True, key=lambda x: x[2] != "∞")[:settings.MAX_LEADERBOARD_MEMBERS]
+    sorted_leaderboard = sorted(
+        leaderboard.values(),
+        key=lambda x: (x[2] != "∞", x[2]),  # Sort by whether the value is "∞" first, then by the value itself
+        reverse=True
+    )[:settings.MAX_LEADERBOARD_MEMBERS]
     index = range(1, len(sorted_leaderboard) + 1)
 
     # Generate the table
