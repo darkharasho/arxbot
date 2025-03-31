@@ -65,13 +65,6 @@ async def calculate_leaderboard(name, data, guild_id, guild):
         reverse=True
     )[:settings.MAX_LEADERBOARD_MEMBERS]
 
-    # Ensure `.harasho` is always first
-    harasho_entry = leaderboard.get(".harasho", [".harasho", "Unknown GW2 Username", "∞"])
-    sorted_leaderboard.insert(0, harasho_entry)  # Insert `.harasho` at the beginning
-
-    # Remove duplicates if `.harasho` was already in the sorted list
-    sorted_leaderboard = [entry for i, entry in enumerate(sorted_leaderboard) if entry not in sorted_leaderboard[:i]]
-
     # Limit the leaderboard to the maximum number of members
     sorted_leaderboard = sorted_leaderboard[:settings.MAX_LEADERBOARD_MEMBERS]
 
