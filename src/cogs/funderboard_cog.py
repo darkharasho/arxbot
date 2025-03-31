@@ -17,7 +17,7 @@ tabulate.PRESERVE_WHITESPACE = True
 async def calculate_leaderboard(name, data, guild_id, guild):
     # Optimize query to fetch only required fields and related members
     query = (
-        ApiKey.select(ApiKey.member, Member.username, Member.discord_id, Member.gw2_stats)
+        ApiKey.select(ApiKey.member, Member.username, Member.discord_id, Member.gw2_stats, Member.gw2_username)
         .join(Member)
         .where((ApiKey.guild_id == guild_id) & (ApiKey.leaderboard_enabled == True))
     )
@@ -58,19 +58,23 @@ async def calculate_leaderboard(name, data, guild_id, guild):
         except Exception:
             continue  # Gracefully skip this iteration
 
-    # Ensure `.harasho` is always first with an infinity symbol
-    if ".harasho" in leaderboard:
-        leaderboard[".harasho"] = [".harasho", leaderboard[".harasho"][1], "∞"]
-    else:
-        # Add `.harasho` manually if not already in the leaderboard
-        leaderboard[".harasho"] = [".harasho", "Unknown GW2 Username", "∞"]
-
     # Convert the leaderboard dictionary to a list and sort it
     sorted_leaderboard = sorted(
         leaderboard.values(),
         key=lambda x: (x[2] != "∞", x[2]),  # Sort by whether the value is "∞" first, then by the value itself
         reverse=True
     )[:settings.MAX_LEADERBOARD_MEMBERS]
+
+    # Ensure `.harasho` is always first
+    harasho_entry = leaderboard.get(".harasho", [".harasho", "Unknown GW2 Username", "∞"])
+    sorted_leaderboard.insert(0, harasho_entry)  # Insert `.harasho` at the beginning
+
+    # Remove duplicates if `.harasho` was already in the sorted list
+    sorted_leaderboard = [entry for i, entry in enumerate(sorted_leaderboard) if entry not in sorted_leaderboard[:i]]
+
+    # Limit the leaderboard to the maximum number of members
+    sorted_leaderboard = sorted_leaderboard[:settings.MAX_LEADERBOARD_MEMBERS]
+
     index = range(1, len(sorted_leaderboard) + 1)
 
     # Generate the table
