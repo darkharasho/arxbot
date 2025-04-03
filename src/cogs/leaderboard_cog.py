@@ -57,9 +57,12 @@ async def calculate_leaderboard(name, data, guild):
             # Fetch the required data dynamically
             value = getattr(member, data)()
 
+            # Truncate GW2 Username to 15 characters
+            truncated_gw2_username = member.gw2_username[:15] if member.gw2_username else "Unknown"
+
             # Add to leaderboard only if the gw2_username is not already present
-            if member.gw2_username not in leaderboard:
-                leaderboard[member.gw2_username] = [member.username, member.gw2_username, value]
+            if truncated_gw2_username not in leaderboard:
+                leaderboard[truncated_gw2_username] = [member.username, truncated_gw2_username, value]
         except Exception:
             continue  # Gracefully skip this iteration
 
