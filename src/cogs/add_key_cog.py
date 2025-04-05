@@ -154,7 +154,7 @@ class AddKeyCog(commands.Cog):
                     for item in ["🔃 Syncing Kill Count...", "🔃 Syncing Capture Count...", "🔃 Syncing Rank Count...", "🔃 Syncing Death Count...", "🔃 Syncing Repair Count...", "🔃 Syncing Yak Count..."]:
                         embed.add_field(name=item, value="", inline=False)
                     await response.edit(embed=embed)
-                    suc = StatUpdaterTask(self.bot, api_key=gw2_api_key)
+                    suc = StatUpdaterTask(self.bot)
                     await suc.update_kill_count(db_member)
                     embed.set_field_at(index=0, name="✅ Kill Count Synced", value="", inline=False)
                     await response.edit(embed=embed)

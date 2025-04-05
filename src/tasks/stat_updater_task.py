@@ -1,160 +1,160 @@
 import discord
-import requests
 import datetime
+import asyncio
 from discord.ext import commands, tasks
 from config import settings
 from src.gw2_api_client import GW2ApiClient
 from src.models.member import Member
 from src.models.api_key import ApiKey
+from src.lib.logger import logger
 
 
 class StatUpdaterTask(commands.Cog):
-    def __init__(self, bot, api_key=None):
+    def __init__(self, bot):
         self.bot = bot
         self.update_stats.start()
 
     def cog_unload(self):
         self.update_stats.cancel()
 
-    # @tasks.loop(seconds=60000)
     @tasks.loop(minutes=45.0)
     async def update_stats(self):
+        logger.info("[GW2 SYNC] 🟢 STARTED")
         await self.bulk_update()
+        logger.info("[GW2 SYNC] 🟢 DONE")
 
     async def bulk_update(self):
-        print("[GW2 SYNC]".ljust(20) + f"🟢 STARTED")
-        members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.leaderboard_enabled == True)]))
-        progress = {
-            "kills": False,
-            "captures": False,
-            "ranks": False,
-            "deaths": False,
-            "supply": False,
-            "yaks": False,
-            "spikes": False
-        }
+        for guild in self.bot.guilds:  # Iterate over all guilds the bot is in
+            logger.info(f"[GW2 SYNC] Processing guild: {guild.name} (ID: {guild.id})")
 
-        for index, member in enumerate(members, start=1):
-            try:
+            # Prefetch all members with their roles for the current guild
+            all_members = {member.id: member for member in guild.members if "Alliance Member" in [role.name for role in member.roles]}
+            if not all_members:
+                logger.info(f"[GW2 SYNC] No 'Alliance Member' roles found in guild: {guild.name}")
+                continue
+
+            # Fetch members with leaderboard enabled
+            members = list(set([api_key.member for api_key in ApiKey.select().where(ApiKey.leaderboard_enabled == True)]))
+            total_members = len(members)
+
+            for index, member in enumerate(members, start=1):
+                if member.discord_id not in all_members:
+                    logger.info(f"[GW2 SYNC] ⚪ Skipping {member.username} (not an Alliance Member in guild {guild.name})")
+                    continue
+
                 start_time = datetime.datetime.now()
-                await self.update_kill_count(member)
-                progress["kills"] = True
-                await self.update_capture_count(member)
-                progress["captures"] = True
-                await self.update_rank_count(member)
-                progress["ranks"] = True
-                await self.update_deaths_count(member)
-                progress["deaths"] = True
-                await self.update_supply_spent(member)
-                progress["supply"] = True
-                await self.update_yaks_escorted(member)
-                progress["yaks"] = True
-                await self.update_spikes(member)
-                progress["spikes"] = True
-                print(f"[GW2 SYNC]".ljust(20) + f"🟢 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
-            except Exception as e:
-                print(f"[GW2 SYNC]".ljust(20) + f"🔴 ({index}/{len(members)}) {member.username}: {datetime.datetime.now() - start_time}")
-                print(" ".ljust(23) + f"[ERR] {e}")
-                print(" ".ljust(23) + f"[PROGRESS] {progress}")
-
-        print("[GW2 SYNC]".ljust(20) + f"🟢 DONE")
+                try:
+                    # Run all stat updates in parallel for the member
+                    await asyncio.gather(
+                        self.update_kill_count(member),
+                        self.update_capture_count(member),
+                        self.update_rank_count(member),
+                        self.update_deaths_count(member),
+                        self.update_supply_spent(member),
+                        self.update_yaks_escorted(member),
+                        self.update_spikes(member),
+                    )
+                    logger.info(f"[GW2 SYNC] 🟢 ({index}/{total_members}) {member.username}: {datetime.datetime.now() - start_time}")
+                except Exception as e:
+                    logger.error(f"[GW2 SYNC] 🔴 ({index}/{total_members}) {member.username}: {datetime.datetime.now() - start_time}")
+                    logger.error(f"    [ERR] {e}")
 
     async def update_kill_count(self, member):
-        member = Member.get(Member.id == member.id)
-        kills = 0
-        for api_key in member.api_keys:
-            avenger_stats = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Realm Avenger")
-            if avenger_stats:
-                kills += avenger_stats[0]["current"]
-        await self.update(member=member, stat_name="kills", stat=kills)
+        try:
+            kills = 0
+            for api_key in member.api_keys:
+                avenger_stats = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Realm Avenger")
+                if avenger_stats:
+                    kills += avenger_stats[0]["current"]
+            await self.update_stat(member, "kills", kills)
+        except Exception as e:
+            logger.error(f"    [ERR] Failed to update kills for {member.username}: {e}")
 
     async def update_capture_count(self, member):
-        member = Member.get(Member.id == member.id)
-        captures = 0
-        for api_key in member.api_keys:
-            conqueror = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Emblem of the Conqueror")
-            if conqueror:
-                captures += conqueror[0].get("current", 0) + (conqueror[0].get("repeated", 0) * 100)
-        await self.update(member=member, stat_name="captures", stat=captures)
+        try:
+            captures = 0
+            for api_key in member.api_keys:
+                conqueror = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Emblem of the Conqueror")
+                if conqueror:
+                    captures += conqueror[0].get("current", 0) + (conqueror[0].get("repeated", 0) * 100)
+            await self.update_stat(member, "captures", captures)
+        except Exception as e:
+            logger.error(f"    [ERR] Failed to update captures for {member.username}: {e}")
 
     async def update_rank_count(self, member):
-        member = Member.get(Member.id == member.id)
-        wvw_ranks = 0
-        for api_key in member.api_keys:
-            account = await GW2ApiClient(api_key=api_key.value).aio_account()
-            if account:
-                wvw_ranks += account["wvw"]["rank"]
-        await self.update(member=member, stat_name="wvw_ranks", stat=wvw_ranks)
+        try:
+            wvw_ranks = 0
+            for api_key in member.api_keys:
+                account = await GW2ApiClient(api_key=api_key.value).aio_account()
+                if account:
+                    wvw_ranks += account["wvw"]["rank"]
+            await self.update_stat(member, "wvw_ranks", wvw_ranks)
+        except Exception as e:
+            logger.error(f"    [ERR] Failed to update ranks for {member.username}: {e}")
 
     async def update_deaths_count(self, member):
-        member = Member.get(Member.id == member.id)
-        deaths = 0
-        for api_key in member.api_keys:
-            characters = await GW2ApiClient(api_key=api_key.value).aio_characters(ids="all")
-            if characters:
-                for character in characters:
-                    deaths += character["deaths"]
-        await self.update(member=member, stat_name="deaths", stat=deaths)
+        try:
+            deaths = 0
+            for api_key in member.api_keys:
+                characters = await GW2ApiClient(api_key=api_key.value).aio_characters(ids="all")
+                if characters:
+                    for character in characters:
+                        deaths += character["deaths"]
+            await self.update_stat(member, "deaths", deaths)
+        except Exception as e:
+            logger.error(f"    [ERR] Failed to update deaths for {member.username}: {e}")
 
     async def update_supply_spent(self, member):
-        member = Member.get(Member.id == member.id)
-        supply = 0
-        for api_key in member.api_keys:
-            repair_master = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Repair Master")
-            if repair_master:
-                supply += repair_master[0]["current"]
-        await self.update(member=member, stat_name="supply", stat=supply)
+        try:
+            supply = 0
+            for api_key in member.api_keys:
+                repair_master = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="Repair Master")
+                if repair_master:
+                    supply += repair_master[0]["current"]
+            await self.update_stat(member, "supply", supply)
+        except Exception as e:
+            logger.error(f"    [ERR] Failed to update supply for {member.username}: {e}")
 
     async def update_yaks_escorted(self, member):
-        member = Member.get(Member.id == member.id)
-        yaks = 0
-        for api_key in member.api_keys:
-            yak_escorts = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="A Pack Dolyak's Best Friend")
-            if yak_escorts:
-                yaks += yak_escorts[0]["current"]
-        await self.update(member=member, stat_name="yaks", stat=yaks)
+        try:
+            yaks = 0
+            for api_key in member.api_keys:
+                yak_escorts = await GW2ApiClient(api_key=api_key.value).aio_account_achievements(name="A Pack Dolyak's Best Friend")
+                if yak_escorts:
+                    yaks += yak_escorts[0]["current"]
+            await self.update_stat(member, "yaks", yaks)
+        except Exception as e:
+            logger.error(f"    [ERR] Failed to update yaks for {member.username}: {e}")
 
     async def update_spikes(self, member):
-        member = Member.get(Member.id == member.id)
-        count = 0
-        legendary_spike_id = 81296
-        for api_key in member.api_keys:
-            items = api_key.api_client().bank()
-
-            if items:
-                for item in items:
-                    if item["id"] == legendary_spike_id:
-                        count += item["count"]
-        await self.update(member=member, stat_name="legendary_spikes", stat=count, single_mode=True)
+        try:
+            count = 0
+            legendary_spike_id = 81296
+            for api_key in member.api_keys:
+                items = api_key.api_client().bank()
+                if items:
+                    for item in items:
+                        if item["id"] == legendary_spike_id:
+                            count += item["count"]
+            await self.update_stat(member, "legendary_spikes", count, single_mode=True)
+        except Exception as e:
+            logger.error(f"    [ERR] Failed to update spikes for {member.username}: {e}")
 
     @staticmethod
-    async def update(member=Member, stat_name=None, stat=None, single_mode=False):
-        if single_mode:
-            stats = member.gw2_stats
-            stats[stat_name] = stat
-        else:
-            if member.gw2_stats and member.gw2_stats.get(stat_name, None):
-                stats = member.gw2_stats
-                stats[stat_name]["this_week"] = stat
-
-                # Check if it's reset to update "last_week" data
-                current_time_utc = datetime.datetime.utcnow()
-                current_time_utc_minus_7 = current_time_utc - datetime.timedelta(hours=7)
-                if current_time_utc_minus_7.weekday() == 4 and current_time_utc_minus_7.hour == 17:
-                    stats[stat_name]["last_week"] = stat
-            else:
-                stats = member.gw2_stats or {}
-                stats[stat_name] = {
-                    "last_week": stat,
-                    "this_week": stat
-                }
+    async def update_stat(member, stat_name, stat, single_mode=False):
         try:
+            stats = member.gw2_stats or {}
+            if single_mode:
+                stats[stat_name] = stat
+            else:
+                stats[stat_name] = {
+                    "last_week": stats.get(stat_name, {}).get("this_week", 0),
+                    "this_week": stat,
+                }
             Member.update(gw2_stats=stats, updated_at=datetime.datetime.now()).where(Member.id == member.id).execute()
-        except:
-            sleep(3)
-            Member.update(gw2_stats=stats, updated_at=datetime.datetime.now()).where(Member.id == member.id).execute()
+        except Exception as e:
+            logger.error(f"    [ERR] Failed to update database for {member.username} ({stat_name}): {e}")
 
 
 async def setup(bot):
-    for guild in bot.guilds:
-        await bot.add_cog(StatUpdaterTask(bot), guild=guild, override=True)
+    await bot.add_cog(StatUpdaterTask(bot))

@@ -58,11 +58,12 @@ class AdminCheckCog(commands.Cog):
                 if isinstance(gw2_stats, str):
                     gw2_stats = json.loads(gw2_stats)
 
+                # Convert datetime objects to strings
                 db_member_dict = {
                     'ID': db_member.id,
                     'Username': db_member.username,
-                    'Created At': db_member.created_at,
-                    'Updated At': db_member.updated_at,
+                    'Created At': db_member.created_at.strftime("%Y-%m-%d %H:%M:%S"),  # Convert to string
+                    'Updated At': db_member.updated_at.strftime("%Y-%m-%d %H:%M:%S") if db_member.updated_at else None,  # Convert to string
                     'DiscordID': db_member.discord_id,
                     'GW2 API Key': api_keys,  # Use the list of dictionaries
                     'GW2 Stats': gw2_stats if gw2_stats else {}  # Use gw2_stats directly if it's already a dict
@@ -73,16 +74,25 @@ class AdminCheckCog(commands.Cog):
 
                 embed = SmartEmbed(title="Database Details", description="")
                 embed.add_field(name="API Keys", value=str(len(api_keys)), inline=True)
-                embed.add_field(name="Member Since", value=db_member.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                                inline=True)
-                embed.add_field(name="Roles", value=role_mentions if role_mentions else "No roles assigned",
-                                inline=False)
-                embed.add_field(name="Raw DB Info", value=db_member_dict, value_type="dict")
+                embed.add_field(name="Member Since", value=db_member.created_at.strftime("%Y-%m-%d %H:%M:%S"), inline=True)
+                embed.add_field(name="Roles", value=role_mentions if role_mentions else "No roles assigned", inline=False)
 
+                # Split the raw DB info into smaller chunks
+                raw_db_info = json.dumps(db_member_dict, indent=4)
+                chunk_size = 1000  # Discord message limit is 2000 characters, so keep chunks smaller
+                chunks = [raw_db_info[i:i + chunk_size] for i in range(0, len(raw_db_info), chunk_size)]
+
+                # Send the embed first
                 embeds = embed.create_embeds()
-
                 for embed in embeds:
-                    await interaction.followup.send(embed=embed, ephemeral=True),
+                    await interaction.followup.send(embed=embed, ephemeral=True)
+
+                # Send the raw DB info in chunks
+                for i, chunk in enumerate(chunks):
+                    await interaction.followup.send(
+                        content=f"**Raw DB Info (Part {i + 1}/{len(chunks)}):**\n```json\n{chunk}\n```",
+                        ephemeral=True
+                    )
             elif action == 'api_keys':
                 await interaction.response.defer(ephemeral=True)
 
