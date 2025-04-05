@@ -16,6 +16,7 @@ class ApiKey(BaseModel):
     primary = BooleanField(default=True)
     guild_id = ForeignKeyField(Guild, null=True, backref="api_keys")
     leaderboard_enabled = BooleanField(default=True)
+    permissions = JSONField(default=list)  # New field to store API key permissions
 
     def account_id(self):
         return GW2ApiClient(api_key=self.value).account()["id"]
@@ -25,7 +26,7 @@ class ApiKey(BaseModel):
 
     @staticmethod
     def find_or_create(member=discord.Member, value=None, primary=None, leaderboard_enabled=None, guild_id=None):
-        api_key = ApiKey.select().where((ApiKey.member == member) & (ApiKey.value == value)  & (ApiKey.guild_id == guild_id)).first()
+        api_key = ApiKey.select().where((ApiKey.member == member) & (ApiKey.value == value) & (ApiKey.guild_id == guild_id)).first()
         if api_key:
             return api_key
         else:

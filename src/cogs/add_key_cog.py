@@ -34,11 +34,14 @@ class AddKeyCog(commands.Cog):
         api_client = GW2ApiClient(api_key=gw2_api_key)
         api_checks = {}
         api_checks_display = []
+        successful_permissions = []  # List to store successful permissions
+
         try:
             if not api_client.account():
                 raise
             api_checks["account"] = True
             api_checks_display.append("✅ Account")
+            successful_permissions.append("account")  # Add to successful permissions
             embed.set_field_at(index=1, name="✅ Account", value="", inline=True)
             await response.edit(embed=embed)
         except:
@@ -48,10 +51,25 @@ class AddKeyCog(commands.Cog):
             await response.edit(embed=embed)
 
         try:
+            if not api_client.wvw():
+                raise
+            api_checks["wvw"] = True
+            api_checks_display.append("✅ WvW")
+            successful_permissions.append("wvw")  # Add to successful permissions
+            embed.set_field_at(index=1, name="✅ WvW", value="", inline=True)
+            await response.edit(embed=embed)
+        except:
+            api_checks["wvw"] = False
+            api_checks_display.append("❌ WvW")
+            embed.set_field_at(index=1, name="❌ WvW", value="", inline=True)
+            await response.edit(embed=embed)
+
+        try:
             if not api_client.account_achievements():
                 raise
             api_checks["account_achievements"] = True
             api_checks_display.append("✅ Progression")
+            successful_permissions.append("progression")  # Add to successful permissions
             embed.set_field_at(index=2, name="✅ Progression", value="", inline=True)
             await response.edit(embed=embed)
         except:
@@ -65,6 +83,7 @@ class AddKeyCog(commands.Cog):
                 raise
             api_checks["characters"] = True
             api_checks_display.append("✅ Characters")
+            successful_permissions.append("characters")  # Add to successful permissions
             embed.set_field_at(index=3, name="✅ Characters", value="", inline=True)
             await response.edit(embed=embed)
         except:
@@ -78,6 +97,7 @@ class AddKeyCog(commands.Cog):
                 raise
             api_checks["builds"] = True
             api_checks_display.append("✅ Builds")
+            successful_permissions.append("builds")  # Add to successful permissions
             embed.set_field_at(index=4, name="✅ Builds", value="", inline=True)
             await response.edit(embed=embed)
         except:
@@ -90,6 +110,7 @@ class AddKeyCog(commands.Cog):
                 raise
             api_checks["bank"] = True
             api_checks_display.append("✅ Inventories")
+            successful_permissions.append("inventories")  # Add to successful permissions
             embed.set_field_at(index=5, name="✅ Inventories", value="", inline=True)
             await response.edit(embed=embed)
         except:
@@ -98,6 +119,7 @@ class AddKeyCog(commands.Cog):
             embed.set_field_at(index=5, name="⚠️ Inventories", value="", inline=True)
             await response.edit(embed=embed)
 
+        # Save successful permissions in the database
         if api_checks["account"]:
             other_keys = db_member.api_keys
             name = GW2ApiClient(api_key=gw2_api_key).account()["name"]
@@ -140,7 +162,15 @@ class AddKeyCog(commands.Cog):
 
             try:
                 full_key = all(api_checks.values())
-                api_key = ApiKey.create(member=db_member, name=name, value=gw2_api_key, primary=primary, leaderboard_enabled=full_key, guild_id=interaction.guild.id)
+                api_key = ApiKey.create(
+                    member=db_member,
+                    name=name,
+                    value=gw2_api_key,
+                    primary=primary,
+                    leaderboard_enabled=full_key,
+                    guild_id=interaction.guild.id,
+                    permissions=successful_permissions
+                )
                 if primary and other_keys:
                     for other_key in other_keys:
                         if other_key == api_key:
