@@ -1,139 +1,47 @@
 import sys
-import pdb
 import discord
 import discord.ui
 from discord.ext import commands
 from discord import app_commands
-from config import settings
-from src.gw2_api_client import GW2ApiClient
-from src.tasks.stat_updater_task import StatUpdaterTask
+from peewee import *
+from lib.api_key_processor import ApiKeyProcessor  # Import the new ApiKeyProcessor class
 from src.models.member import Member
 from src.models.api_key import ApiKey
-from peewee import *
+from src.tasks.stat_updater_task import StatUpdaterTask
 
 
 class AddKeyCog(commands.Cog):
     def __init__(self, bot):
-        # pdb.set_trace()
         self.bot = bot
         self.db = SqliteDatabase('eww_bot.db')
 
     async def process_key(self, interaction, gw2_api_key: str, primary: bool = True):
-        await interaction.response.defer(ephemeral=True)
-        embed = discord.Embed(
-            title="Checking API key...",
-            description=f"```{gw2_api_key}```"
-        )
-        embed.add_field(name="Permissions", value="", inline=False)
-        for check in ["🔃 Account", "🔃 Progression", "🔃 Characters", "🔃 Builds", "🔃 Inventories"]:
-            embed.add_field(name=check, value="")
-        embed.add_field(name="", value="")
-
-        response = await interaction.followup.send(embed=embed, ephemeral=True)
-        db_member = Member.find_or_create(member=interaction.user, guild=interaction.guild)
-        api_client = GW2ApiClient(api_key=gw2_api_key)
-        api_checks = {}
-        api_checks_display = []
-        successful_permissions = []  # List to store successful permissions
-
-        try:
-            if not api_client.account():
-                raise
-            api_checks["account"] = True
-            api_checks_display.append("✅ Account")
-            successful_permissions.append("account")  # Add to successful permissions
-            embed.set_field_at(index=1, name="✅ Account", value="", inline=True)
-            await response.edit(embed=embed)
-        except:
-            api_checks["account"] = False
-            api_checks_display.append("❌ Account")
-            embed.set_field_at(index=1, name="❌ Account", value="", inline=True)
-            await response.edit(embed=embed)
-
-        try:
-            if not api_client.wvw():
-                raise
-            api_checks["wvw"] = True
-            api_checks_display.append("✅ WvW")
-            successful_permissions.append("wvw")  # Add to successful permissions
-            embed.set_field_at(index=1, name="✅ WvW", value="", inline=True)
-            await response.edit(embed=embed)
-        except:
-            api_checks["wvw"] = False
-            api_checks_display.append("❌ WvW")
-            embed.set_field_at(index=1, name="❌ WvW", value="", inline=True)
-            await response.edit(embed=embed)
-
-        try:
-            if not api_client.account_achievements():
-                raise
-            api_checks["account_achievements"] = True
-            api_checks_display.append("✅ Progression")
-            successful_permissions.append("progression")  # Add to successful permissions
-            embed.set_field_at(index=2, name="✅ Progression", value="", inline=True)
-            await response.edit(embed=embed)
-        except:
-            api_checks["account_achievements"] = False
-            api_checks_display.append("⚠️ Progression")
-            embed.set_field_at(index=2, name="⚠️ Progression", value="", inline=True)
-            await response.edit(embed=embed)
-
-        try:
-            if not api_client.characters():
-                raise
-            api_checks["characters"] = True
-            api_checks_display.append("✅ Characters")
-            successful_permissions.append("characters")  # Add to successful permissions
-            embed.set_field_at(index=3, name="✅ Characters", value="", inline=True)
-            await response.edit(embed=embed)
-        except:
-            api_checks["characters"] = False
-            api_checks_display.append("⚠️ Characters")
-            embed.set_field_at(index=3, name="⚠️ Characters", value="", inline=True)
-            await response.edit(embed=embed)
-
-        try:
-            if not api_client.builds(index=0, tabs="all"):
-                raise
-            api_checks["builds"] = True
-            api_checks_display.append("✅ Builds")
-            successful_permissions.append("builds")  # Add to successful permissions
-            embed.set_field_at(index=4, name="✅ Builds", value="", inline=True)
-            await response.edit(embed=embed)
-        except:
-            api_checks["builds"] = False
-            api_checks_display.append("⚠️ Builds")
-            embed.set_field_at(index=4, name="⚠️ Builds", value="", inline=True)
-            await response.edit(embed=embed)
-        try:
-            if not api_client.bank():
-                raise
-            api_checks["bank"] = True
-            api_checks_display.append("✅ Inventories")
-            successful_permissions.append("inventories")  # Add to successful permissions
-            embed.set_field_at(index=5, name="✅ Inventories", value="", inline=True)
-            await response.edit(embed=embed)
-        except:
-            api_checks["bank"] = False
-            api_checks_display.append("⚠️ Inventories")
-            embed.set_field_at(index=5, name="⚠️ Inventories", value="", inline=True)
-            await response.edit(embed=embed)
+        # Use the new ApiKeyProcessor to handle the API key processing
+        result = await ApiKeyProcessor.process_key(interaction, gw2_api_key=gw2_api_key)
+        api_checks = result["api_checks"]
+        successful_permissions = result["successful_permissions"]
+        db_member = result["db_member"]
+        api_client = result["api_client"]
+        response = result["response"]
+        embed = result["embed"]
 
         # Save successful permissions in the database
         if api_checks["account"]:
             other_keys = db_member.api_keys
-            name = GW2ApiClient(api_key=gw2_api_key).account()["name"]
+            name = api_client.account()["name"]
             embed.title = "Validating API Key..."
             embed.clear_fields()
             embed.add_field(name="🔃 Checking Guild Wars 2 accounts...", value="")
             embed.add_field(name="🔃 Checking primary key status...", value="")
             await response.edit(embed=embed)
+
             for other_key in other_keys:
                 if api_client.account()["id"] == other_key.account_id():
                     embed = discord.Embed(
                         title="Guild Wars 2 API Key - Account already Registered",
-                        description="If you'd like to change your API key, remove the other one first wtih `/remove-key`",
-                        color=0xff0000)
+                        description="If you'd like to change your API key, remove the other one first with `/remove-key`",
+                        color=0xff0000
+                    )
                     embed.add_field(
                         name="Proposed GW2 API Key",
                         value=f"```\n{name}\n\n{gw2_api_key}```",
@@ -146,17 +54,20 @@ class AddKeyCog(commands.Cog):
                     )
                     await response.edit(embed=embed)
                     return
+
             embed.set_field_at(index=0, name="✅ Guild Wars 2 accounts verified", value="")
             await response.edit(embed=embed)
 
             if primary is False and len(other_keys) == 0:
                 embed = discord.Embed(
                     title="Guild Wars 2 API Key - You must have a primary key",
-                    color=0xff0000)
+                    color=0xff0000
+                )
                 embed.add_field(name="GW2 API Key", value=f"```{gw2_api_key}```", inline=False)
                 embed.add_field(name="Primary?", value=primary)
                 await response.edit(embed=embed)
                 return
+
             embed.set_field_at(index=1, name="✅ Primary key verified", value="")
             await response.edit(embed=embed)
 
@@ -169,71 +80,41 @@ class AddKeyCog(commands.Cog):
                     primary=primary,
                     leaderboard_enabled=full_key,
                     guild_id=interaction.guild.id,
-                    permissions=successful_permissions
+                    permissions=",".join(successful_permissions)  # Save permissions as a comma-separated string
                 )
                 if primary and other_keys:
                     for other_key in other_keys:
-                        if other_key == api_key:
-                            pass
-                        else:
+                        if other_key != api_key:
                             other_key.primary = False
                             other_key.save()
-                if full_key:
-                    embed.title = "Syncing Guild Wars 2 Data..."
-                    embed.clear_fields()
-                    for item in ["🔃 Syncing Kill Count...", "🔃 Syncing Capture Count...", "🔃 Syncing Rank Count...", "🔃 Syncing Death Count...", "🔃 Syncing Repair Count...", "🔃 Syncing Yak Count..."]:
-                        embed.add_field(name=item, value="", inline=False)
-                    await response.edit(embed=embed)
-                    suc = StatUpdaterTask(self.bot)
-                    await suc.update_kill_count(db_member)
-                    embed.set_field_at(index=0, name="✅ Kill Count Synced", value="", inline=False)
-                    await response.edit(embed=embed)
-                    await suc.update_capture_count(db_member)
-                    embed.set_field_at(index=1, name="✅ Capture Count Synced", value="", inline=False)
-                    await response.edit(embed=embed)
-                    await suc.update_rank_count(db_member)
-                    embed.set_field_at(index=2, name="✅ Rank Count Synced", value="", inline=False)
-                    await response.edit(embed=embed)
-                    await suc.update_deaths_count(db_member)
-                    embed.set_field_at(index=3, name="✅ Death Count Synced", value="", inline=False)
-                    await response.edit(embed=embed)
-                    await suc.update_supply_spent(db_member)
-                    embed.set_field_at(index=4, name="✅ Supply Count Synced", value="", inline=False)
-                    await response.edit(embed=embed)
-                    await suc.update_yaks_escorted(db_member)
-                    embed.set_field_at(index=5, name="✅ Yak Count Synced", value="", inline=False)
-                    await response.edit(embed=embed)
 
                 embed = discord.Embed(
                     title="Guild Wars 2 API Key",
                     description=f"**API key registered for:** {interaction.user.mention}",
-                    color=0x0ff000)
+                    color=0x0ff000
+                )
                 embed.add_field(name="Name", value=f"```{name}```")
                 embed.add_field(name="Primary?", value=f"```{primary}```")
                 embed.add_field(name="Key", value=f"```{gw2_api_key}```", inline=False)
-                embed.add_field(name="Permissions", value="", inline=False)
-                for api_check in api_checks_display:
-                    embed.add_field(name=api_check, value="")
-                embed.add_field(name="", value="")
-                response = await response.edit(embed=embed)
-
+                embed.add_field(name="Permissions", value=", ".join(successful_permissions), inline=False)
                 await response.edit(embed=embed)
             except IntegrityError:
                 embed = discord.Embed(
                     title="Guild Wars 2 API Key - Key already registered",
-                    color=0xff0000)
+                    color=0xff0000
+                )
                 embed.add_field(name="GW2 API Key", value=f"```{gw2_api_key}```", inline=False)
                 await response.edit(embed=embed)
         else:
             embed = discord.Embed(
                 title="Guild Wars 2 API Key - Invalid GW2 API Key or Insufficient Permissions",
-                color=0xff0000)
-            for api_check in api_checks_display:
+                color=0xff0000
+            )
+            for api_check in result["api_checks_display"]:
                 embed.add_field(name=api_check, value="")
             embed.add_field(name="", value="")
             embed.add_field(name="GW2 API Key", value=f"```{gw2_api_key}```", inline=False)
             await response.edit(embed=embed)
-
 
     @app_commands.command(
         name="add-key",
@@ -251,7 +132,7 @@ class AddKeyCog(commands.Cog):
 
     @app_commands.command(
         name="alt-api-key",
-        description="Add an API key for an alt acount. Requires: account, Optional: characters, progression"
+        description="Add an API key for an alt account. Requires: account, Optional: characters, progression"
     )
     async def alt_api_key(self, interaction, gw2_api_key: str):
         await self.process_key(interaction=interaction, gw2_api_key=gw2_api_key, primary=False)
