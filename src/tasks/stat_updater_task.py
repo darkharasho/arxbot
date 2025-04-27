@@ -24,6 +24,7 @@ class StatUpdaterTask(commands.Cog):
         logger.info("[GW2 SYNC] 🟢 DONE")
 
     async def bulk_update(self):
+        return # Disable bulk update for now
         for guild in self.bot.guilds:  # Iterate over all guilds the bot is in
             logger.info(f"[GW2 SYNC] Processing guild: {guild.name} (ID: {guild.id})")
 
