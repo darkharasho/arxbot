@@ -11,6 +11,7 @@ TOKEN = config['Token']
 APPLICATION_ID = config['ApplicationID']
 GW2_API_KEY = config['GW2ApiKey']
 MAX_LEADERBOARD_MEMBERS = config.get('MaxLeaderboardMembers', 7)
+GW2_GUILD_ID = config['GW2GuildID']
 
 SET_USER_CHANNELS = [
     {

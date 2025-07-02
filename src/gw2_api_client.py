@@ -258,3 +258,21 @@ class GW2ApiClient:
         for listed_server in settings.SERVER_NAMES:
             if listed_server["id"] == server_id:
                 return listed_server
+
+    def get_guild_members(self, guild_id):
+        """
+        Returns a list of all members in the specified guild.
+
+        Each member object contains:
+            - name (string): The account name of the member.
+            - rank (string): The guild rank of the member.
+            - joined (string): The time and date the member joined the guild (ISO-8601), or None.
+            - wvw_member (boolean): Whether the player has the guild chosen for WvW matchmaking.
+        """
+        endpoint = f"/guild/{guild_id}/members"
+        response = requests.get(self.url + endpoint, headers=self.headers)
+        if response.status_code == 200:
+            return json.loads(response.text)
+        else:
+            print(f"Request failed with status code {response.status_code}")
+            return []
