@@ -67,16 +67,18 @@ class AdminRelinkCog(commands.Cog):
         # 1. Members where wvw_member is False
         non_wvw_members = {m['name'].strip() for m in gw2_members if m.get('name') and not m.get('wvw_member', False)}
 
-        # 2. Members with no corresponding Member.api_key
+        # 2. Members with no corresponding ApiKey for this guild and GW2 name
         no_api_key_members = set()
         for m in gw2_members:
             gw2_name = m.get('name')
             if not gw2_name:
                 continue
             gw2_name_stripped = gw2_name.strip()
-            member_obj = db_members.get(gw2_name_stripped)
-            # Check for missing or empty api_keys (reverse relation)
-            if not member_obj or not member_obj.api_keys.exists():
+            keys = ApiKey.select().where(
+                (ApiKey.guild_id == interaction.guild.id) &
+                (ApiKey.name == gw2_name_stripped)
+            )
+            if keys.count() == 0:
                 no_api_key_members.add(gw2_name_stripped)
 
         # 3. Discord "Alliance Member" role holders not in GW2 guild
