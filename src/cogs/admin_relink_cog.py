@@ -107,13 +107,13 @@ class AdminRelinkCog(commands.Cog):
         def get_roles_for_member(member_obj):
             if not member_obj:
                 return ""
-            # Find the Discord member by discord_id
             discord_member = interaction.guild.get_member(member_obj.discord_id)
             if not discord_member:
                 return ""
-            # Exclude @everyone and return role names
+            # Exclude @everyone and "Alliance Member"
             return ", ".join(
-                role.name for role in discord_member.roles if role.name != "@everyone"
+                role.name for role in discord_member.roles
+                if role.name != "@everyone" and role.name != "Alliance Member"
             )
 
         # Prepare CSV
