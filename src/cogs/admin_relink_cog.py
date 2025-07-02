@@ -57,17 +57,28 @@ class AdminRelinkCog(commands.Cog):
         gw2_names = {m['name'] for m in gw2_members}
         gw2_names_lower = {n for n in gw2_names}
 
-        # Build db_members for quick lookup (normalize to lowercase)
-        db_members = {m.gw2_username.lower(): m for m in Member.select() if m.gw2_username}
+        # Build db_members for quick lookup (normalize and strip whitespace)
+        db_members = {
+            m.gw2_username.strip(): m
+            for m in Member.select()
+            if m.gw2_username and m.gw2_username.strip()
+        }
 
         # 1. Members where wvw_member is False
-        non_wvw_members = {m['name'].lower() for m in gw2_members if m.get('name') and not m.get('wvw_member', False)}
+        non_wvw_members = {m['name'].strip() for m in gw2_members if m.get('name') and not m.get('wvw_member', False)}
+
         # 2. Members with no corresponding Member.api_key
-        no_api_key_members = {
-            m['name'].lower()
-            for m in gw2_members
-            if m.get('name') and (m['name'].lower() not in db_members or not db_members[m['name'].lower()].api_key)
-        }
+        no_api_key_members = set()
+        for m in gw2_members:
+            gw2_name = m.get('name')
+            if not gw2_name:
+                continue
+            gw2_name_stripped = gw2_name.strip()
+            member_obj = db_members.get(gw2_name_stripped)
+            # Check for missing or empty api_key
+            if not member_obj or not getattr(member_obj, "api_key", None) or not member_obj.api_key.value:
+                no_api_key_members.add(gw2_name_stripped)
+
         # 3. Discord "Alliance Member" role holders not in GW2 guild
         alliance_role = discord.utils.get(interaction.guild.roles, name="Alliance Member")
         discord_alliance_members = [m for m in interaction.guild.members if alliance_role in m.roles]
@@ -75,8 +86,8 @@ class AdminRelinkCog(commands.Cog):
         for member in discord_alliance_members:
             db_member = Member.select().where(Member.username == member.name).first()
             if db_member and db_member.gw2_username:
-                discord_gw2_names.add(db_member.gw2_username.lower())
-        not_in_gw2_guild = {name for name in discord_gw2_names if name not in {n.lower() for n in gw2_names}}
+                discord_gw2_names.add(db_member.gw2_username.strip())
+        not_in_gw2_guild = {name for name in discord_gw2_names if name not in {n.strip() for n in gw2_names}}
 
         # Aggregate infractions
         all_names = non_wvw_members | no_api_key_members | not_in_gw2_guild
@@ -92,7 +103,7 @@ class AdminRelinkCog(commands.Cog):
 
         # Helper to get guilds for a member
         def get_guilds_for_member(member_obj):
-            if member_obj and member_obj.api_key:
+            if member_obj and getattr(member_obj, "api_key", None):
                 try:
                     return ", ".join(member_obj.api_key.member.gw2_guild_names())
                 except Exception:
