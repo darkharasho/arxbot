@@ -55,18 +55,18 @@ class AdminRelinkCog(commands.Cog):
         # 1. Get all GW2 guild members
         gw2_members = gw2_client.get_guild_members(guild_id)
         gw2_names = {m['name'] for m in gw2_members}
-        gw2_names_lower = {n.lower() for n in gw2_names}
+        gw2_names_lower = {n for n in gw2_names}
 
         # Build db_members for quick lookup
-        db_members = {m.gw2_username.lower(): m for m in Member.select() if m.gw2_username}
+        db_members = {m.gw2_username: m for m in Member.select() if m.gw2_username}
 
         # 1. Members where wvw_member is False
-        non_wvw_members = {m['name'].lower() for m in gw2_members if not m.get('wvw_member', False) and m.get('name')}
+        non_wvw_members = {m['name'] for m in gw2_members if not m.get('wvw_member', False) and m.get('name')}
         # 2. Members with no corresponding Member.api_key
         no_api_key_members = {
-            m['name'].lower()
+            m['name']
             for m in gw2_members
-            if m.get('name') and (m['name'].lower() not in db_members or not db_members[m['name'].lower()].api_key)
+            if m.get('name') and (m['name'] not in db_members or not db_members[m['name']].api_key)
         }
         # 3. Discord "Alliance Member" role holders not in GW2 guild
         alliance_role = discord.utils.get(interaction.guild.roles, name="Alliance Member")
@@ -75,7 +75,7 @@ class AdminRelinkCog(commands.Cog):
         for member in discord_alliance_members:
             db_member = Member.select().where(Member.username == member.name).first()
             if db_member and db_member.gw2_username:
-                discord_gw2_names.add(db_member.gw2_username.lower())
+                discord_gw2_names.add(db_member.gw2_username)
         not_in_gw2_guild = {name for name in discord_gw2_names if name not in gw2_names_lower}
 
         # Aggregate infractions
