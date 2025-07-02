@@ -16,6 +16,7 @@ class ApiKey(BaseModel):
     primary = BooleanField(default=True)
     guild_id = ForeignKeyField(Guild, null=True, backref="api_keys")
     leaderboard_enabled = BooleanField(default=True)
+    guild_names = JSONField(null=True, default=list)
 
     def account_id(self):
         return GW2ApiClient(api_key=self.value).account()["id"]
