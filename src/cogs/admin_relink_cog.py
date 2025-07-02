@@ -57,16 +57,16 @@ class AdminRelinkCog(commands.Cog):
         gw2_names = {m['name'] for m in gw2_members}
         gw2_names_lower = {n for n in gw2_names}
 
-        # Build db_members for quick lookup
-        db_members = {m.gw2_username: m for m in Member.select() if m.gw2_username}
+        # Build db_members for quick lookup (normalize to lowercase)
+        db_members = {m.gw2_username.lower(): m for m in Member.select() if m.gw2_username}
 
         # 1. Members where wvw_member is False
-        non_wvw_members = {m['name'] for m in gw2_members if not m.get('wvw_member', False) and m.get('name')}
+        non_wvw_members = {m['name'].lower() for m in gw2_members if m.get('name') and not m.get('wvw_member', False)}
         # 2. Members with no corresponding Member.api_key
         no_api_key_members = {
-            m['name']
+            m['name'].lower()
             for m in gw2_members
-            if m.get('name') and (m['name'] not in db_members or not db_members[m['name']].api_key)
+            if m.get('name') and (m['name'].lower() not in db_members or not db_members[m['name'].lower()].api_key)
         }
         # 3. Discord "Alliance Member" role holders not in GW2 guild
         alliance_role = discord.utils.get(interaction.guild.roles, name="Alliance Member")
@@ -75,8 +75,8 @@ class AdminRelinkCog(commands.Cog):
         for member in discord_alliance_members:
             db_member = Member.select().where(Member.username == member.name).first()
             if db_member and db_member.gw2_username:
-                discord_gw2_names.add(db_member.gw2_username)
-        not_in_gw2_guild = {name for name in discord_gw2_names if name not in gw2_names_lower}
+                discord_gw2_names.add(db_member.gw2_username.lower())
+        not_in_gw2_guild = {name for name in discord_gw2_names if name not in {n.lower() for n in gw2_names}}
 
         # Aggregate infractions
         all_names = non_wvw_members | no_api_key_members | not_in_gw2_guild
@@ -98,11 +98,6 @@ class AdminRelinkCog(commands.Cog):
                 except Exception:
                     return ""
             return ""
-
-        # Helper to get Discord username for a GW2 username
-        def get_discord_name(gw2_name):
-            member_obj = db_members.get(gw2_name, None)
-            return member_obj.username if member_obj else ""
 
         # Prepare CSV
         output = io.StringIO()
