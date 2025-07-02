@@ -122,10 +122,11 @@ class AdminRelinkCog(commands.Cog):
             discord_member = interaction.guild.get_member(member_obj.discord_id)
             if not discord_member:
                 return ""
-            # Exclude @everyone and "Alliance Member"
+            # Exclude specified roles
+            excluded_roles = {"@everyone", "Alliance Member", "Guild Leader", "Guild Officer", "Announcer"}
             return ", ".join(
                 role.name for role in discord_member.roles
-                if role.name != "@everyone" and role.name != "Alliance Member"
+                if role.name not in excluded_roles
             )
 
         # Prepare CSV
@@ -142,7 +143,9 @@ class AdminRelinkCog(commands.Cog):
             writer.writerow([name, discord_name, infraction, "", "", roles, ""])
 
         output.seek(0)
-        csv_file = discord.File(fp=io.BytesIO(output.getvalue().encode()), filename="relink_report.csv")
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        file_name = f"relink_report_{date_str}.csv"
+        csv_file = discord.File(fp=io.BytesIO(output.getvalue().encode()), filename=file_name)
         await interaction.followup.send("Here is the relink report:", file=csv_file, ephemeral=True)
 
 async def setup(bot):
