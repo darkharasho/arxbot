@@ -2,6 +2,7 @@ import time
 from src.models.api_key import ApiKey
 from src.gw2_api_client import GW2ApiClient
 from peewee import DoesNotExist
+from tqdm import tqdm  # <-- Progress bar
 
 SLEEP_SECONDS = 2  # Adjust as needed to avoid rate limits
 
@@ -27,7 +28,8 @@ def get_guild_names_for_key(api_key_value):
         return []
 
 def main():
-    for api_key in ApiKey.select():
+    api_keys = list(ApiKey.select())
+    for api_key in tqdm(api_keys, desc="Populating guild names"):
         print(f"Processing ApiKey id={api_key.id}...")
         guild_names = get_guild_names_for_key(api_key.value)
         print(f"  Found guilds: {guild_names}")
