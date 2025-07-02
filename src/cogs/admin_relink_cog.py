@@ -85,11 +85,23 @@ class AdminRelinkCog(commands.Cog):
         alliance_role = discord.utils.get(interaction.guild.roles, name="Alliance Member")
         discord_alliance_members = [m for m in interaction.guild.members if alliance_role in m.roles]
         discord_gw2_names = set()
+        not_in_gw2_guild = set()
+        gw2_names_set = {n.strip() for n in gw2_names}
+
         for member in discord_alliance_members:
             db_member = Member.select().where(Member.username == member.name).first()
             if db_member and db_member.gw2_username:
-                discord_gw2_names.add(db_member.gw2_username.strip())
-        not_in_gw2_guild = {name for name in discord_gw2_names if name not in {n.strip() for n in gw2_names}}
+                # Check all API keys for this member
+                api_keys = list(db_member.api_keys)
+                # If any API key's name is in the GW2 guild, skip
+                in_guild = False
+                for api_key in api_keys:
+                    if api_key.name and api_key.name.strip() in gw2_names_set:
+                        in_guild = True
+                        break
+                if not in_guild:
+                    discord_gw2_names.add(db_member.gw2_username.strip())
+                    not_in_gw2_guild.add(db_member.gw2_username.strip())
 
         # Aggregate infractions
         all_names = non_wvw_members | no_api_key_members | not_in_gw2_guild
