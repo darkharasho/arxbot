@@ -101,31 +101,29 @@ class AdminRelinkCog(commands.Cog):
             if name in not_in_gw2_guild:
                 infractions[name].append("Alliance Member not in GW2 Guild")
 
-        # Helper to get guilds for a member
-        def get_guilds_for_member(member_obj):
-            if member_obj:
-                try:
-                    # Get all related ApiKey objects for this member
-                    guild_names = []
-                    for api_key in member_obj.api_keys:
-                        # If you have a method to get guild names from the ApiKey, use it here
-                        if hasattr(api_key, "member") and hasattr(api_key.member, "gw2_guild_names"):
-                            guild_names.extend(api_key.member.gw2_guild_names())
-                    return ", ".join(set(guild_names))
-                except Exception:
-                    return ""
-            return ""
+        # Helper to get Discord roles for a member
+        def get_roles_for_member(member_obj):
+            if not member_obj:
+                return ""
+            # Find the Discord member by discord_id
+            discord_member = interaction.guild.get_member(member_obj.discord_id)
+            if not discord_member:
+                return ""
+            # Exclude @everyone and return role names
+            return ", ".join(
+                role.name for role in discord_member.roles if role.name != "@everyone"
+            )
 
         # Prepare CSV
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(["GW2 Username", "Discord Username", "Infraction", "Guild"])
+        writer.writerow(["GW2 Username", "Discord Username", "Infraction", "Roles"])
 
         for name, infraction_list in infractions.items():
             member_obj = db_members.get(name, None)
             discord_name = member_obj.username if member_obj else ""
-            guilds = get_guilds_for_member(member_obj)
-            writer.writerow([name, discord_name, ", ".join(infraction_list), guilds])
+            roles = get_roles_for_member(member_obj)
+            writer.writerow([name, discord_name, ", ".join(infraction_list), roles])
 
         output.seek(0)
         csv_file = discord.File(fp=io.BytesIO(output.getvalue().encode()), filename="relink_report.csv")

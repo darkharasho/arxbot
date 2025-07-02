@@ -140,7 +140,34 @@ class AddKeyCog(commands.Cog):
 
             try:
                 full_key = all(api_checks.values())
-                api_key = ApiKey.create(member=db_member, name=name, value=gw2_api_key, primary=primary, leaderboard_enabled=full_key, guild_id=interaction.guild.id)
+                api_key = ApiKey.create(
+                    member=db_member,
+                    name=name,
+                    value=gw2_api_key,
+                    primary=primary,
+                    leaderboard_enabled=full_key,
+                    guild_id=interaction.guild.id
+                )
+                # --- NEW: Fetch and store guild names ---
+                try:
+                    account_data = api_client.account()
+                    guild_ids = account_data.get("guilds", [])
+                    guild_names = []
+                    for guild_id in guild_ids:
+                        try:
+                            guild_info = api_client.guild(gw2_guild_id=guild_id)
+                            if isinstance(guild_info, dict):
+                                gname = guild_info.get("name")
+                                if gname:
+                                    guild_names.append(gname)
+                        except Exception as e:
+                            print(f"Failed to fetch guild info for {guild_id}: {e}")
+                    api_key.guild_names = guild_names
+                    api_key.save()
+                except Exception as e:
+                    print(f"Failed to fetch or save guild names: {e}")
+                # --- END NEW ---
+
                 if primary and other_keys:
                     for other_key in other_keys:
                         if other_key == api_key:
