@@ -75,8 +75,8 @@ class AdminRelinkCog(commands.Cog):
                 continue
             gw2_name_stripped = gw2_name.strip()
             member_obj = db_members.get(gw2_name_stripped)
-            # Check for missing or empty api_key
-            if not member_obj or not getattr(member_obj, "api_key", None) or not member_obj.api_key.value:
+            # Check for missing or empty api_keys (reverse relation)
+            if not member_obj or not member_obj.api_keys.exists():
                 no_api_key_members.add(gw2_name_stripped)
 
         # 3. Discord "Alliance Member" role holders not in GW2 guild
@@ -103,9 +103,15 @@ class AdminRelinkCog(commands.Cog):
 
         # Helper to get guilds for a member
         def get_guilds_for_member(member_obj):
-            if member_obj and getattr(member_obj, "api_key", None):
+            if member_obj:
                 try:
-                    return ", ".join(member_obj.api_key.member.gw2_guild_names())
+                    # Get all related ApiKey objects for this member
+                    guild_names = []
+                    for api_key in member_obj.api_keys:
+                        # If you have a method to get guild names from the ApiKey, use it here
+                        if hasattr(api_key, "member") and hasattr(api_key.member, "gw2_guild_names"):
+                            guild_names.extend(api_key.member.gw2_guild_names())
+                    return ", ".join(set(guild_names))
                 except Exception:
                     return ""
             return ""
