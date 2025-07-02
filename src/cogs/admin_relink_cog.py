@@ -119,18 +119,15 @@ class AdminRelinkCog(commands.Cog):
         # Prepare CSV
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow([
-            "GW2 Username", "Discord Username", "Infraction",
-            "Roles", "Kicked?", "Fixed", "Notes"
-        ])
+        # No header row
 
         for name, infraction_list in infractions.items():
             member_obj = db_members.get(name, None)
             discord_name = member_obj.username if member_obj else ""
             roles = get_roles_for_member(member_obj)
             infraction = ", ".join(infraction_list)
-            # Kicked?, Fixed, Notes left blank for manual use in Google Sheets
-            writer.writerow([name, discord_name, infraction, roles, "", "", ""])
+            # Kicked?, Immune, Notes left blank for manual use in Google Sheets
+            writer.writerow([name, discord_name, infraction, "", "", roles, ""])
 
         output.seek(0)
         csv_file = discord.File(fp=io.BytesIO(output.getvalue().encode()), filename="relink_report.csv")
