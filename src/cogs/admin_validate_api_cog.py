@@ -242,7 +242,7 @@ class AdminValidateApiCog(commands.Cog):
                 await interaction.response.defer(ephemeral=True)
 
                 # Define the roles to check
-                roles_to_check = {"DUI", "eA", "SC", "EWW", "PUGS", "PUMP", "bad", "kD", "VIXI", "XXX"}
+                roles_to_check = {"DUI", "EWW", "PUGS", "UA", "FAFO", "PYRO", "Goon", "UWU"}
                 excluded_role = "Alliance Member"
 
                 # Check if the "Alliance Member" role exists, and create it if it doesn't
@@ -331,8 +331,7 @@ class AdminValidateApiCog(commands.Cog):
                 # Defer the response to allow time for processing
                 await interaction.response.defer()
 
-                roles_to_check = {"DUI", "eA", "SC", "EWW", "PUGS", "PUMP", "bad", "kD", "VIXI", "XXX",
-                                  "Alliance Member"}
+                roles_to_check = {"DUI", "EWW", "PUGS", "UA", "FAFO", "PYRO", "Goon", "UWU", "Alliance Member"}
 
                 try:
                     # Get the guild and the "Alliance Member" role
