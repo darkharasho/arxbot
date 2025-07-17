@@ -130,7 +130,31 @@ class AdminCog(commands.Cog):
                     # Send the large message split into chunks
                     await send_large_message(interaction, full_message, ephemeral=False)
 
+    @app_commands.command(
+        name="list_role_gw2",
+        description="List all users with a specified Discord role and their GW2 usernames"
+    )
+    @app_commands.describe(role_name="The name of the Discord role to search for")
+    async def list_role_gw2(self, interaction: discord.Interaction, role_name: str):
+        await interaction.response.defer(ephemeral=True)
+        guild = interaction.guild
+        role = discord.utils.get(guild.roles, name=role_name)
+        if not role:
+            await interaction.followup.send(f"Role '{role_name}' not found.", ephemeral=True)
+            return
 
+        members_with_role = [m for m in guild.members if role in m.roles]
+        lines = []
+        for discord_member in members_with_role:
+            db_member = Member.select().where(Member.discord_id == discord_member.id).first()
+            gw2_username = db_member.gw2_username if db_member and db_member.gw2_username else "N/A"
+            lines.append(f"{discord_member.display_name}: {gw2_username}")
+
+        if not lines:
+            await interaction.followup.send(f"No users found with role '{role_name}'.", ephemeral=True)
+        else:
+            message = "**Users with role '{}':**\n```{}```".format(role_name, "\n".join(lines))
+            await interaction.followup.send(message, ephemeral=True)
 
 async def setup(bot):
     for guild in bot.guilds:
