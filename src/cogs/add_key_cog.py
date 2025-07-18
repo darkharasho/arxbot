@@ -100,7 +100,15 @@ class AddKeyCog(commands.Cog):
 
         if api_checks["account"]:
             other_keys = db_member.api_keys
-            name = GW2ApiClient(api_key=gw2_api_key).account()["name"]
+            account_data = GW2ApiClient(api_key=gw2_api_key).account()
+            if not account_data or "name" not in account_data:
+                embed = discord.Embed(
+                    title="Guild Wars 2 API Key - Invalid GW2 API Key or Insufficient Permissions",
+                    color=0xff0000)
+                embed.add_field(name="GW2 API Key", value=f"```{gw2_api_key}```", inline=False)
+                await response.edit(embed=embed)
+                return
+            name = account_data["name"]
             embed.title = "Validating API Key..."
             embed.clear_fields()
             embed.add_field(name="🔃 Checking Guild Wars 2 accounts...", value="")
