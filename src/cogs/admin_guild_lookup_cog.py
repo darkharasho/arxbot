@@ -17,13 +17,13 @@ class AdminGuildLookup(commands.Cog):
     )
     async def admin_guild_lookup(self, interaction: discord.Interaction, role: discord.Role):
         if await authorization.ensure_admin(interaction):
-            await interaction.response.defer(ephemeral=True)
+            await interaction.response.defer(ephemeral=False)
 
             # Get all members with the specified role
             members_with_role = [member for member in interaction.guild.members if role in member.roles]
 
             if not members_with_role:
-                await interaction.followup.send(f"No members found with the role {role.name}.", ephemeral=True)
+                await interaction.followup.send(f"No members found with the role {role.name}.", ephemeral=False)
                 return
 
             # Prepare to create multiple embeds if necessary
@@ -62,7 +62,7 @@ class AdminGuildLookup(commands.Cog):
 
             # Send the embeds one by one
             for embed in embeds:
-                await interaction.followup.send(embed=embed, ephemeral=True)
+                await interaction.followup.send(embed=embed, ephemeral=False)
 
 
 async def setup(bot):
