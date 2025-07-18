@@ -39,10 +39,13 @@ class AdminGuildLookup(commands.Cog):
                 gw2_accounts = [api_key.name for api_key in db_member.api_keys] if db_member.api_keys else [
                     "No API Key"]
                 gw2_accounts_str = "\n- ".join(gw2_accounts)
+                # List all roles except @everyone
+                role_names = [role.name for role in member.roles if role.name != "@everyone"]
+                roles_str = ", ".join(role_names) if role_names else "None"
 
                 current_embed.add_field(
                     name=f"{member.display_name} ({member.name})",
-                    value=f"GW2 Accounts: ```- {gw2_accounts_str}```",
+                    value=f"GW2 Accounts: ```- {gw2_accounts_str}```\nRoles: {roles_str}",
                     inline=False
                 )
                 field_count += 1
