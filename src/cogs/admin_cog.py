@@ -23,7 +23,7 @@ from src.gw2_api_client import GW2ApiClient
 tabulate.PRESERVE_WHITESPACE = True
 
 
-async def send_large_message(interaction, content, chunk_size=2000):
+async def send_large_message(interaction, content, chunk_size=2000, ephemeral=False):
     """Utility function to send large messages split into chunks."""
     chunks = textwrap.wrap(content, width=chunk_size, replace_whitespace=False)
     for chunk in chunks:
