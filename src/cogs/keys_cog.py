@@ -25,9 +25,13 @@ class KeysCog(commands.Cog):
             color=0x0ff000)
         member = Member.select().where(Member.discord_id == interaction.user.id).first()
         for api_key in member.api_keys:
+            world_info = api_key.api_client().world()
+            account_info = api_key.api_client().account()
+            server = world_info["name"] if world_info and "name" in world_info else "Unknown"
+            rank = account_info.get("wvw", {}).get("rank", "Unknown") if account_info else "Unknown"
             value = f"""
-            **Server**: {api_key.api_client().world()["name"]}
-            **Rank**: {api_key.api_client().account()["wvw"]["rank"]}
+            **Server**: {server}
+            **Rank**: {rank}
             **Key**: 
             ```{api_key.value}```
             """
