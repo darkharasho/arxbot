@@ -136,7 +136,7 @@ class AdminCog(commands.Cog):
     )
     @app_commands.describe(role_name="The name of the Discord role to search for")
     async def list_role_gw2(self, interaction: discord.Interaction, role_name: str):
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=False)
         guild = interaction.guild
         role = discord.utils.get(guild.roles, name=role_name)
         if not role:
