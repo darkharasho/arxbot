@@ -154,7 +154,7 @@ class AdminCog(commands.Cog):
             await interaction.followup.send(f"No users found with role '{role_name}'.", ephemeral=True)
         else:
             message = "**Users with role '{}':**\n```{}```".format(role_name, "\n".join(lines))
-            await interaction.followup.send(message, ephemeral=True)
+            await interaction.followup.send(message)
 
 async def setup(bot):
     for guild in bot.guilds:
