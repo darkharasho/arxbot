@@ -23,7 +23,7 @@ from src.gw2_api_client import GW2ApiClient
 tabulate.PRESERVE_WHITESPACE = True
 
 
-async def send_large_message(interaction, content, chunk_size=2000, ephemeral=True):
+async def send_large_message(interaction, content, chunk_size=2000):
     """Utility function to send large messages split into chunks."""
     chunks = textwrap.wrap(content, width=chunk_size, replace_whitespace=False)
     for chunk in chunks:
@@ -140,7 +140,7 @@ class AdminCog(commands.Cog):
         guild = interaction.guild
         role = discord.utils.get(guild.roles, name=role_name)
         if not role:
-            await interaction.followup.send(f"Role '{role_name}' not found.", ephemeral=True)
+            await interaction.followup.send(f"Role '{role_name}' not found.")
             return
 
         members_with_role = [m for m in guild.members if role in m.roles]
@@ -151,10 +151,10 @@ class AdminCog(commands.Cog):
             lines.append(f"{discord_member.display_name}: {gw2_username}")
 
         if not lines:
-            await interaction.followup.send(f"No users found with role '{role_name}'.", ephemeral=True)
+            await interaction.followup.send(f"No users found with role '{role_name}'.")
         else:
             message = "**Users with role '{}':**\n```{}```".format(role_name, "\n".join(lines))
-            await interaction.followup.send(message)
+            await interaction.followup.send(message, ephemeral=False)
 
 async def setup(bot):
     for guild in bot.guilds:
