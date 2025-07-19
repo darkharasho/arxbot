@@ -120,7 +120,7 @@ async def on_guild_remove(guild):
 @bot.event
 async def on_member_update(before, after):
     added_roles = [role for role in after.roles if role not in before.roles]
-    roles_to_check = {"DUI", "EWW", "PUGS", "UA", "FAFO", "PYRO", "Goon", "UWU", "Alliance Member"}
+    roles_to_check = {"DUI", "EWW", "PUGS", "UA", "FAFO", "PYRO", "Goon", "Alliance Member"}
     for role in added_roles:
         if role.name in roles_to_check:
             # Here you can add your code to handle the role addition

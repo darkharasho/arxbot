@@ -6,7 +6,7 @@ from discord import app_commands
 class PreferredGuildCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.allowed_roles = {"DUI", "EWW", "PUGS", "UA", "FAFO", "PYRO", "Goon", "UWU"}
+        self.allowed_roles = {"DUI", "EWW", "PUGS", "UA", "FAFO", "PYRO", "Goon"}
 
     @app_commands.command(
         name="preferred-guild",
