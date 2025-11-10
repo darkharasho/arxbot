@@ -47,7 +47,61 @@ class AdminLookup(commands.Cog):
             if len(db_member.api_keys) > 0:
                 embed.add_field(name="Guilds", value=f"```- " + '\n- '.join(db_member.gw2_guild_names()) + "```",
                                 inline=False)
-                embed.add_field(name="GW2 Accounts", value="```- " + "\n- ".join(api_key.name for api_key in db_member.api_keys) + "```", inline=False)
+
+                gw2_account_lines = []
+                for api_key in db_member.api_keys:
+                    api_client = GW2ApiClient(api_key=api_key.value)
+                    try:
+                        account_details = api_client.account()
+                    except Exception:
+                        account_details = None
+
+                    account_line = f"- {api_key.name}"
+                    detail_parts = []
+
+                    if account_details:
+                        wvw_rank = account_details.get("wvw_rank")
+                        if wvw_rank is not None:
+                            detail_parts.append(f"WvW Rank: {wvw_rank}")
+
+                        commander_tag = account_details.get("commander")
+                        if commander_tag is not None:
+                            detail_parts.append(f"Commander: {'Yes' if commander_tag else 'No'}")
+
+                        world_id = account_details.get("world")
+                        if world_id:
+                            try:
+                                world_details = api_client.world_by_id(world_id)
+                            except Exception:
+                                world_details = None
+                            world_name = None
+
+                            world_population = None
+
+                            if isinstance(world_details, dict):
+                                world_name = world_details.get("name")
+                                world_population = world_details.get("population")
+                            elif isinstance(world_details, list) and world_details:
+                                world_name = world_details[0].get("name")
+                                world_population = world_details[0].get("population")
+
+                            if world_name:
+                                detail_parts.append(f"World: {world_name} ({world_id})")
+                            else:
+                                detail_parts.append(f"World ID: {world_id}")
+
+                            if world_population:
+                                detail_parts.append(f"Population: {world_population}")
+
+                    if detail_parts:
+                        account_line += " | " + " | ".join(detail_parts)
+                    elif account_details is None:
+                        account_line += " | Unable to fetch account details"
+
+                    gw2_account_lines.append(account_line)
+
+                embed.add_field(name="GW2 Accounts", value="```" + "\n".join(gw2_account_lines) + "```",
+                                inline=False)
             else:
                 embed.add_field(name="API Keys", value="```No API Keys found```", inline=False)
             await interaction.followup.send(embed=embed, ephemeral=True)

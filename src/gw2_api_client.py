@@ -44,6 +44,9 @@ class GW2ApiClient:
 
     def world(self):
         world_id = self.account()["world"]
+        return self.world_by_id(world_id)
+
+    def world_by_id(self, world_id):
         ping_url = self.url + f"/worlds?id={world_id}"
         response = requests.get(ping_url, headers=self.headers)
 
