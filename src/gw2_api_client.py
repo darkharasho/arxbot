@@ -44,10 +44,22 @@ class GW2ApiClient:
 
     def world(self):
         world_id = self.account()["world"]
+        return self.world_by_id(world_id)
+
+    def world_by_id(self, world_id):
         ping_url = self.url + f"/worlds?id={world_id}"
         response = requests.get(ping_url, headers=self.headers)
 
         # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            return json.loads(response.text)
+        else:
+            print(f"Request failed with status code {response.status_code}")
+
+    def wvw_team_by_id(self, team_id):
+        ping_url = self.url + f"/wvw/teams?ids={team_id}"
+        response = requests.get(ping_url, headers=self.headers)
+
         if response.status_code == 200:
             return json.loads(response.text)
         else:
