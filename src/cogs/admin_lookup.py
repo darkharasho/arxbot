@@ -75,6 +75,49 @@ class AdminLookup(commands.Cog):
 
         return f"WvW Team ID: {team_id_int}"
 
+    @staticmethod
+    def _resolve_guild_names(api_key, account_details, api_client):
+        stored_names = getattr(api_key, "guild_names", None)
+        if isinstance(stored_names, list):
+            cleaned_names = [name.strip() for name in stored_names if isinstance(name, str) and name.strip()]
+            if cleaned_names:
+                return cleaned_names
+        elif isinstance(stored_names, str) and stored_names.strip():
+            return [stored_names.strip()]
+
+        guild_ids = []
+        if isinstance(account_details, dict):
+            guild_ids = account_details.get("guilds") or []
+            if not isinstance(guild_ids, list):
+                guild_ids = []
+
+        resolved_names = []
+        for guild_id in guild_ids:
+            try:
+                guild_details = api_client.guild(gw2_guild_id=guild_id)
+            except Exception:
+                continue
+
+            if not isinstance(guild_details, dict):
+                continue
+
+            guild_name = guild_details.get("name")
+            guild_tag = guild_details.get("tag")
+
+            if isinstance(guild_name, str) and isinstance(guild_tag, str):
+                resolved_names.append(f"{guild_name} [{guild_tag}]")
+            elif isinstance(guild_name, str):
+                resolved_names.append(guild_name)
+
+        if resolved_names:
+            try:
+                api_key.guild_names = resolved_names
+                api_key.save()
+            except Exception:
+                pass
+
+        return resolved_names
+
     def model_to_dict(self, model):
         """Convert a Peewee model instance to a dictionary."""
         return {
@@ -97,10 +140,6 @@ class AdminLookup(commands.Cog):
             embed.add_field(name="", value="```------ Account Details ------```", inline=False)
 
             if len(db_member.api_keys) > 0:
-                embed.add_field(name="Guilds", value=f"```- " + '\n- '.join(db_member.gw2_guild_names()) + "```",
-                                inline=False)
-
-                gw2_account_blocks = []
                 for api_key in db_member.api_keys:
                     api_client = GW2ApiClient(api_key=api_key.value)
                     try:
@@ -108,10 +147,7 @@ class AdminLookup(commands.Cog):
                     except Exception:
                         account_details = None
 
-                    account_lines = [f"- {api_key.name}"]
-                    detail_parts = []
-
-                    if account_details:
+                    if isinstance(account_details, dict):
                         wvw_info = account_details.get("wvw")
                         if isinstance(wvw_info, dict):
                             wvw_rank = wvw_info.get("rank")
@@ -119,23 +155,29 @@ class AdminLookup(commands.Cog):
                         else:
                             wvw_rank = None
                             team_id = None
+                    else:
+                        wvw_rank = None
+                        team_id = None
 
-                        if wvw_rank is None:
-                            detail_parts.append("WvW Rank: Unknown")
-                        else:
-                            detail_parts.append(f"WvW Rank: {wvw_rank}")
+                    rank_line = f"WvW Rank: {wvw_rank}" if wvw_rank is not None else "WvW Rank: Unknown"
+                    team_line = self._format_wvw_team_details(team_id)
 
-                        detail_parts.append(self._format_wvw_team_details(team_id))
+                    guild_names = self._resolve_guild_names(api_key, account_details, api_client)
 
-                    if detail_parts:
-                        account_lines.extend([f"    {part}" for part in detail_parts])
+                    detail_lines = [rank_line, team_line]
+                    if guild_names:
+                        detail_lines.append("Guilds:")
+                        detail_lines.extend(f"- {name}" for name in guild_names)
                     elif account_details is None:
-                        account_lines.append("    Unable to fetch account details")
+                        detail_lines.append("Guilds: Unknown")
+                    else:
+                        detail_lines.append("Guilds: None")
 
-                    gw2_account_blocks.append("\n".join(account_lines))
+                    if account_details is None:
+                        detail_lines.insert(0, "Unable to fetch account details")
 
-                embed.add_field(name="GW2 Accounts", value="```" + "\n\n".join(gw2_account_blocks) + "```",
-                                inline=False)
+                    field_name = api_key.name or "Guild Wars 2 Account"
+                    embed.add_field(name=field_name, value="\n".join(detail_lines), inline=False)
             else:
                 embed.add_field(name="API Keys", value="```No API Keys found```", inline=False)
             await interaction.followup.send(embed=embed, ephemeral=True)
