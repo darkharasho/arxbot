@@ -17,7 +17,10 @@ def get_guild_names_for_key(api_key_value):
                 guild_info = client.guild(gw2_guild_id=guild_id)
                 if isinstance(guild_info, dict):
                     name = guild_info.get("name")
-                    if name:
+                    tag = guild_info.get("tag")
+                    if name and tag:
+                        guild_names.append(f"{name} [{tag}]")
+                    elif name:
                         guild_names.append(name)
             except Exception as e:
                 print(f"Failed to fetch guild info for {guild_id}: {e}")

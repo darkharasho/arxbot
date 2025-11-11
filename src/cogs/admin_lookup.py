@@ -80,13 +80,22 @@ class AdminLookup(commands.Cog):
 
     @staticmethod
     def _resolve_guild_names(api_key, account_details, api_client):
+        def _clean_names(names):
+            return [name.strip() for name in names if isinstance(name, str) and name.strip()]
+
+        cached_without_tags = []
+
         stored_names = getattr(api_key, "guild_names", None)
         if isinstance(stored_names, list):
-            cleaned_names = [name.strip() for name in stored_names if isinstance(name, str) and name.strip()]
-            if cleaned_names:
+            cleaned_names = _clean_names(stored_names)
+            if cleaned_names and all("[" in name and "]" in name for name in cleaned_names):
                 return cleaned_names
+            cached_without_tags = cleaned_names
         elif isinstance(stored_names, str) and stored_names.strip():
-            return [stored_names.strip()]
+            cleaned_name = stored_names.strip()
+            if "[" in cleaned_name and "]" in cleaned_name:
+                return [cleaned_name]
+            cached_without_tags = [cleaned_name]
 
         guild_ids = []
         if isinstance(account_details, dict):
@@ -118,6 +127,10 @@ class AdminLookup(commands.Cog):
                 api_key.save()
             except Exception:
                 pass
+            return resolved_names
+
+        if cached_without_tags:
+            return cached_without_tags
 
         return resolved_names
 
