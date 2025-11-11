@@ -23,6 +23,80 @@ class AdminLookup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @staticmethod
+    def _format_wvw_team_details(team_payload, team_id):
+        def extract_team_name(payload):
+            if not payload:
+                return None
+
+            if isinstance(payload, list):
+                if not payload:
+                    return None
+                payload = payload[0]
+
+            if not isinstance(payload, dict):
+                return None
+
+            candidate_keys = (
+                "name",
+                "team_name",
+                "label",
+            )
+            for key in candidate_keys:
+                value = payload.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+
+            nested_team = payload.get("team")
+            if isinstance(nested_team, dict):
+                for key in ("name", "label"):
+                    value = nested_team.get(key)
+                    if isinstance(value, str) and value.strip():
+                        return value.strip()
+
+            return None
+
+        team_name = extract_team_name(team_payload)
+
+        if isinstance(team_payload, list) and team_payload:
+            team_payload = team_payload[0]
+
+        region = None
+        tier = None
+        if isinstance(team_payload, dict):
+            region_code = team_payload.get("region")
+            if isinstance(region_code, str):
+                region_code = region_code.lower()
+                region = {
+                    "na": "North America",
+                    "eu": "Europe",
+                }.get(region_code, region_code.upper())
+            elif isinstance(region_code, int):
+                region = {
+                    1: "North America",
+                    2: "Europe",
+                }.get(region_code)
+
+            tier_value = team_payload.get("tier")
+            if isinstance(tier_value, int):
+                tier = str(tier_value)
+
+            match_id = team_payload.get("id")
+            if isinstance(match_id, str) and "-" in match_id:
+                tier_part = match_id.split("-", 1)[1]
+                if tier_part.isdigit():
+                    tier = tier_part
+
+        if team_name:
+            parts = [f"WvW Team: {team_name} ({team_id})"]
+            if region:
+                parts.append(f"Region: {region}")
+            if tier:
+                parts.append(f"Tier: {tier}")
+            return "; ".join(parts)
+
+        return f"WvW Team ID: {team_id}"
+
     def model_to_dict(self, model):
         """Convert a Peewee model instance to a dictionary."""
         return {
@@ -75,16 +149,7 @@ class AdminLookup(commands.Cog):
                             except Exception:
                                 team_details = None
 
-                            team_name = None
-                            if isinstance(team_details, dict):
-                                team_name = team_details.get("name")
-                            elif isinstance(team_details, list) and team_details:
-                                team_name = team_details[0].get("name")
-
-                            if team_name:
-                                detail_parts.append(f"WvW Team: {team_name} ({team_id})")
-                            else:
-                                detail_parts.append(f"WvW Team ID: {team_id}")
+                            detail_parts.append(self._format_wvw_team_details(team_details, team_id))
 
                     if detail_parts:
                         account_lines.extend([f"    {part}" for part in detail_parts])
