@@ -54,17 +54,17 @@ class AdminLookup(commands.Cog):
         self.bot = bot
 
     @staticmethod
-    def _format_wvw_team_details(team_id):
+    def _format_wvw_team_name(team_id):
         if team_id is None:
-            return "WvW Team: Unknown"
+            return "Unknown"
 
         try:
             team_id_int = int(team_id)
         except (TypeError, ValueError):
-            return f"WvW Team: {team_id}"
+            return str(team_id)
 
         if team_id_int == 0:
-            return "WvW Team: Unassigned"
+            return "Unassigned"
 
         team_names = WVW_TEAM_NAMES.get(team_id_int)
         team_name = None
@@ -74,9 +74,9 @@ class AdminLookup(commands.Cog):
                 team_name = raw_name.strip()
 
         if team_name:
-            return f"WvW Team: {team_name}"
+            return team_name
 
-        return f"WvW Team ID: {team_id_int}"
+        return str(team_id_int)
 
     @staticmethod
     def _resolve_guild_names(api_key, account_details, api_client):
@@ -160,34 +160,51 @@ class AdminLookup(commands.Cog):
                         wvw_rank = None
                         team_id = None
 
-                    rank_line = f"WvW Rank: {wvw_rank}" if wvw_rank is not None else "WvW Rank: Unknown"
-                    team_line = self._format_wvw_team_details(team_id)
+                    wvw_rank_value = str(wvw_rank) if wvw_rank is not None else "Unknown"
+                    wvw_team_value = self._format_wvw_team_name(team_id)
 
                     guild_names = self._resolve_guild_names(api_key, account_details, api_client)
-
-                    detail_lines = [rank_line, team_line]
                     if guild_names:
-                        detail_lines.append("Guilds:")
-                        detail_lines.extend(f"  - {name}" for name in guild_names)
+                        guild_lines = "\n".join(f"  - {name}" for name in guild_names)
                     elif account_details is None:
-                        detail_lines.append("Guilds: Unknown")
+                        guild_lines = "Unknown"
                     else:
-                        detail_lines.append("Guilds: None")
+                        guild_lines = "None"
 
-                    if account_details is None:
-                        detail_lines.insert(0, "Unable to fetch account details")
+                    account_name = None
+                    if isinstance(account_details, dict):
+                        raw_name = account_details.get("name")
+                        if isinstance(raw_name, str) and raw_name.strip():
+                            account_name = raw_name.strip()
 
-                    field_name = api_key.name or "Guild Wars 2 Account"
-                    formatted_block = "\n".join(detail_lines)
+                    if not account_name:
+                        fallback_name = api_key.name if isinstance(api_key.name, str) else None
+                        account_name = fallback_name or "Unknown"
 
                     account_embed = discord.Embed(
                         title=f"{member.display_name} | {member.name}",
                         description="",
                     )
                     account_embed.set_thumbnail(url=member.display_avatar.url)
+
                     account_embed.add_field(
-                        name=field_name,
-                        value=f"```\n{formatted_block}\n```",
+                        name="username",
+                        value=f"```\n{account_name}\n```",
+                        inline=False,
+                    )
+                    account_embed.add_field(
+                        name="WvW Rank",
+                        value=f"```\n{wvw_rank_value}\n```",
+                        inline=False,
+                    )
+                    account_embed.add_field(
+                        name="WvW Team",
+                        value=f"```\n{wvw_team_value}\n```",
+                        inline=False,
+                    )
+                    account_embed.add_field(
+                        name="Guilds",
+                        value=f"```\n{guild_lines}\n```",
                         inline=False,
                     )
 
