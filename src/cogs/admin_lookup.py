@@ -112,13 +112,20 @@ class AdminLookup(commands.Cog):
                     detail_parts = []
 
                     if account_details:
-                        wvw_rank = account_details.get("wvw_rank")
+                        wvw_info = account_details.get("wvw")
+                        if isinstance(wvw_info, dict):
+                            wvw_rank = wvw_info.get("rank")
+                            team_id = wvw_info.get("team_id")
+                        else:
+                            wvw_rank = None
+                            team_id = None
+
                         if wvw_rank is None:
                             detail_parts.append("WvW Rank: Unknown")
                         else:
                             detail_parts.append(f"WvW Rank: {wvw_rank}")
 
-                        detail_parts.append(self._format_wvw_team_details(account_details.get("wvw_team")))
+                        detail_parts.append(self._format_wvw_team_details(team_id))
 
                     if detail_parts:
                         account_lines.extend([f"    {part}" for part in detail_parts])
