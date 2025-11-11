@@ -1,6 +1,5 @@
 import pdb
 import discord
-import json
 
 from discord.ext import commands
 from discord import app_commands
@@ -114,16 +113,12 @@ class AdminLookup(commands.Cog):
 
                     if account_details:
                         wvw_rank = account_details.get("wvw_rank")
-                        if wvw_rank is not None:
+                        if wvw_rank is None:
+                            detail_parts.append("WvW Rank: Unknown")
+                        else:
                             detail_parts.append(f"WvW Rank: {wvw_rank}")
 
-                        commander_tag = account_details.get("commander")
-                        if commander_tag is not None:
-                            detail_parts.append(f"Commander: {'Yes' if commander_tag else 'No'}")
-
-                        team_id = account_details.get("wvw_team")
-                        if team_id:
-                            detail_parts.append(self._format_wvw_team_details(team_id))
+                        detail_parts.append(self._format_wvw_team_details(account_details.get("wvw_team")))
 
                     if detail_parts:
                         account_lines.extend([f"    {part}" for part in detail_parts])

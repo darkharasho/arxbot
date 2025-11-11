@@ -56,32 +56,6 @@ class GW2ApiClient:
         else:
             print(f"Request failed with status code {response.status_code}")
 
-    def wvw_team_by_id(self, team_id):
-        """Fetch WvW team metadata for the given team id.
-
-        The API is a bit inconsistent about whether it expects `id` or
-        `ids`, so we attempt both forms before giving up. The response may be
-        either a dict or a single-item list depending on the parameter that
-        succeeds.
-        """
-        endpoints = (
-            ("/wvw/teams", {"ids": team_id}),
-            ("/wvw/teams", {"id": team_id}),
-        )
-
-        response = None
-        for path, params in endpoints:
-            ping_url = self.url + path
-            response = requests.get(ping_url, params=params, headers=self.headers)
-
-            if response.status_code == 200:
-                return response.json()
-
-        if response is not None:
-            print(f"Request for WvW team {team_id} failed with status code {response.status_code}")
-        return None
-
-
     def characters(self, *args, **kwargs):
         ids = kwargs.get('ids', None)
         ping_url = self.url + "/characters"
