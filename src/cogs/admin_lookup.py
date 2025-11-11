@@ -167,7 +167,7 @@ class AdminLookup(commands.Cog):
                     detail_lines = [rank_line, team_line]
                     if guild_names:
                         detail_lines.append("Guilds:")
-                        detail_lines.extend(f"- {name}" for name in guild_names)
+                        detail_lines.extend(f"  - {name}" for name in guild_names)
                     elif account_details is None:
                         detail_lines.append("Guilds: Unknown")
                     else:
@@ -177,7 +177,12 @@ class AdminLookup(commands.Cog):
                         detail_lines.insert(0, "Unable to fetch account details")
 
                     field_name = api_key.name or "Guild Wars 2 Account"
-                    embed.add_field(name=field_name, value="\n".join(detail_lines), inline=False)
+                    formatted_block = "\n".join(detail_lines)
+                    embed.add_field(
+                        name=field_name,
+                        value=f"```\n{formatted_block}\n```",
+                        inline=False,
+                    )
             else:
                 embed.add_field(name="API Keys", value="```No API Keys found```", inline=False)
             await interaction.followup.send(embed=embed, ephemeral=True)
