@@ -151,10 +151,16 @@ class AdminLookup(commands.Cog):
             await interaction.response.defer(ephemeral=True)
             db_member = Member.find_or_create(member=member, guild=interaction.guild)
 
-            embeds = []
-
             if len(db_member.api_keys) > 0:
-                for api_key in db_member.api_keys:
+                lookup_embed = discord.Embed(
+                    title=f"{member.display_name} | {member.name}",
+                    description="",
+                )
+                lookup_embed.set_thumbnail(url=member.display_avatar.url)
+
+                api_key_count = len(db_member.api_keys)
+
+                for index, api_key in enumerate(db_member.api_keys):
                     api_client = GW2ApiClient(api_key=api_key.value)
                     try:
                         account_details = api_client.account()
@@ -194,34 +200,29 @@ class AdminLookup(commands.Cog):
                         fallback_name = api_key.name if isinstance(api_key.name, str) else None
                         account_name = fallback_name or "Unknown"
 
-                    account_embed = discord.Embed(
-                        title=f"{member.display_name} | {member.name}",
-                        description="",
-                    )
-                    account_embed.set_thumbnail(url=member.display_avatar.url)
-
-                    account_embed.add_field(
+                    lookup_embed.add_field(
                         name="username",
                         value=f"```\n{account_name}\n```",
                         inline=False,
                     )
-                    account_embed.add_field(
+                    lookup_embed.add_field(
                         name="WvW Rank",
                         value=f"```\n{wvw_rank_value}\n```",
-                        inline=False,
+                        inline=True,
                     )
-                    account_embed.add_field(
+                    lookup_embed.add_field(
                         name="WvW Team",
                         value=f"```\n{wvw_team_value}\n```",
-                        inline=False,
+                        inline=True,
                     )
-                    account_embed.add_field(
+                    lookup_embed.add_field(
                         name="Guilds",
                         value=f"```\n{guild_lines}\n```",
                         inline=False,
                     )
 
-                    embeds.append(account_embed)
+                    if index < api_key_count - 1:
+                        lookup_embed.add_field(name="\u200b", value="\u200b", inline=False)
             else:
                 no_keys_embed = discord.Embed(
                     title=f"{member.display_name} | {member.name}",
@@ -229,9 +230,10 @@ class AdminLookup(commands.Cog):
                 )
                 no_keys_embed.set_thumbnail(url=member.display_avatar.url)
                 no_keys_embed.add_field(name="API Keys", value="```No API Keys found```", inline=False)
-                embeds.append(no_keys_embed)
+                await interaction.followup.send(embed=no_keys_embed, ephemeral=True)
+                return
 
-            await interaction.followup.send(embeds=embeds, ephemeral=True)
+            await interaction.followup.send(embed=lookup_embed, ephemeral=True)
 
 
 async def setup(bot):
