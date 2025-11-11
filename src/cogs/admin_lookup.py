@@ -49,6 +49,9 @@ WVW_TEAM_NAMES = {
 }
 
 
+SEPARATOR_FIELD_NAME = " - ".join(["-"] * 24)
+
+
 class AdminLookup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -223,8 +226,8 @@ class AdminLookup(commands.Cog):
 
                     if index < api_key_count - 1:
                         lookup_embed.add_field(
-                            name="────────────────",
-                            value="\u200b",
+                            name=SEPARATOR_FIELD_NAME,
+                            value="\u2063",
                             inline=False,
                         )
             else:
