@@ -19,83 +19,62 @@ from src.lib.smart_embed import SmartEmbed
 tabulate.PRESERVE_WHITESPACE = True
 
 
+WVW_TEAM_NAMES = {
+    11001: {"en": "Moogooloo", "de": "Muuguuluu", "es": "Mugulú", "fr": "Moogooloo"},
+    11002: {"en": "Rall's Rest", "de": "Ralls Rast", "es": "Descanso de Rall", "fr": "Repos de Rall"},
+    11003: {"en": "Domain of Torment", "de": "Domäne der Pein", "es": "Dominio de Tormento", "fr": "Domaine du tourment"},
+    11004: {"en": "Yohlon Haven", "de": "Yohlon-Winkel", "es": "Puerto de Yohlon", "fr": "Havre de Yohlon"},
+    11005: {"en": "Tombs of Drascir", "de": "Gräber von Drascir", "es": "Tumba de Drascir", "fr": "Tombes de Drascir"},
+    11006: {"en": "Hall of Judgment", "de": "Halle des jüngsten Gerichts", "es": "Sala del Juicio", "fr": "Hall de jugement"},
+    11007: {"en": "Throne of Balthazar", "de": "Thron des Balthasar", "es": "Trono de Balthazar", "fr": "Trône de Balthazar"},
+    11008: {"en": "Dwayna's Temple", "de": "Dwaynas Tempel", "es": "Templo de Dwayna", "fr": "Temple de Dwayna"},
+    11009: {"en": "Abaddon's Prison", "de": "Abaddons Gefängnis", "es": "Prisón de Abaddon", "fr": "Prison d'Abaddon"},
+    11010: {"en": "Cathedral of Blood", "de": "Kathedrale des Blutes", "es": "Catedral de la Sangre", "fr": "Cathédrale sanglante"},
+    11011: {"en": "Lutgardis Conservatory", "de": "Lutgardis-Wintergarten", "es": "Invernadero de Lutgardis", "fr": "Conservatoire de Lutgardis"},
+    11012: {"en": "Mosswood", "de": "Mooswald", "es": "Bosquemusgoso", "fr": "Bois moussu"},
+    12001: {"en": "Skrittsburgh", "de": "Skrittsburg", "es": "Skrittsburgo", "fr": "Skrittsburgh"},
+    12002: {"en": "Fortune's Vale", "de": "Glückstal", "es": "Valle de la Fortuna", "fr": "Vallée de la fortune"},
+    12003: {"en": "Silent Woods", "de": "Stille Wälder", "es": "Bosques Silenciosos", "fr": "Forêt silencieuse"},
+    12004: {"en": "Ettin's Back", "de": "Ettinbuckel", "es": "Loma de Ettin", "fr": "Échine d'Ettin"},
+    12005: {"en": "Domain of Anguish", "de": "Domäne der Seelenpein", "es": "Dominio de la Angustia", "fr": "Domaine de l'angoisse"},
+    12006: {"en": "Palawadan", "de": "Palawadan", "es": "Palawadan", "fr": "Palawadan"},
+    12007: {"en": "Bloodstone Gulch", "de": "Blutstein-Schlucht", "es": "Barranco de Hematites", "fr": "Ravn de la pierre de sang"},
+    12008: {"en": "Frost Citadel", "de": "Frostzitadelle", "es": "Ciudadela de la Escarcha", "fr": "Citadelle du givre"},
+    12009: {"en": "Dragrimmar", "de": "Dragrimmar", "es": "Dragrimmar", "fr": "Dragrimmar"},
+    12010: {"en": "Grenth's Door", "de": "Grenths Tür", "es": "Puerta de Grenth", "fr": "Porte de Grenth"},
+    12011: {"en": "Mirror of Lyssa", "de": "Spiegel der Lyssa", "es": "Espejo de Lyssa", "fr": "Miroir de Lyssa"},
+    12012: {"en": "Melandru's Dome", "de": "Melandrus-Dom", "es": "Cúpula de Melandru", "fr": "Dôme de Melandru"},
+    12013: {"en": "Kormir's Library", "de": "Kormirs Bibliothek", "es": "Biblioteca de Kormir", "fr": "Bibliothèque de Kormir"},
+    12014: {"en": "Great House Aviary", "de": "Vogelhalle des Groẞen Hauses", "es": "Gran Aviario", "fr": "Volière de la grande maison"},
+    12015: {"en": "Bava Nisos", "de": "Bava Nisos", "es": "Bava Nisos", "fr": "Bava Nisos"},
+}
+
+
 class AdminLookup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @staticmethod
-    def _format_wvw_team_details(team_payload, team_id):
-        def extract_team_name(payload):
-            if not payload:
-                return None
+    def _format_wvw_team_details(team_id):
+        if team_id is None:
+            return "WvW Team: Unknown"
 
-            if isinstance(payload, list):
-                if not payload:
-                    return None
-                payload = payload[0]
+        try:
+            team_id_int = int(team_id)
+        except (TypeError, ValueError):
+            return f"WvW Team ID: {team_id}"
 
-            if not isinstance(payload, dict):
-                return None
-
-            candidate_keys = (
-                "name",
-                "team_name",
-                "label",
-            )
-            for key in candidate_keys:
-                value = payload.get(key)
-                if isinstance(value, str) and value.strip():
-                    return value.strip()
-
-            nested_team = payload.get("team")
-            if isinstance(nested_team, dict):
-                for key in ("name", "label"):
-                    value = nested_team.get(key)
-                    if isinstance(value, str) and value.strip():
-                        return value.strip()
-
-            return None
-
-        team_name = extract_team_name(team_payload)
-
-        if isinstance(team_payload, list) and team_payload:
-            team_payload = team_payload[0]
-
-        region = None
-        tier = None
-        if isinstance(team_payload, dict):
-            region_code = team_payload.get("region")
-            if isinstance(region_code, str):
-                region_code = region_code.lower()
-                region = {
-                    "na": "North America",
-                    "eu": "Europe",
-                }.get(region_code, region_code.upper())
-            elif isinstance(region_code, int):
-                region = {
-                    1: "North America",
-                    2: "Europe",
-                }.get(region_code)
-
-            tier_value = team_payload.get("tier")
-            if isinstance(tier_value, int):
-                tier = str(tier_value)
-
-            match_id = team_payload.get("id")
-            if isinstance(match_id, str) and "-" in match_id:
-                tier_part = match_id.split("-", 1)[1]
-                if tier_part.isdigit():
-                    tier = tier_part
+        team_names = WVW_TEAM_NAMES.get(team_id_int)
+        team_name = None
+        if isinstance(team_names, dict):
+            raw_name = team_names.get("en")
+            if isinstance(raw_name, str):
+                team_name = raw_name.strip()
 
         if team_name:
-            parts = [f"WvW Team: {team_name} ({team_id})"]
-            if region:
-                parts.append(f"Region: {region}")
-            if tier:
-                parts.append(f"Tier: {tier}")
-            return "; ".join(parts)
+            return f"WvW Team: {team_name} ({team_id_int})"
 
-        return f"WvW Team ID: {team_id}"
+        return f"WvW Team ID: {team_id_int}"
 
     def model_to_dict(self, model):
         """Convert a Peewee model instance to a dictionary."""
@@ -144,12 +123,7 @@ class AdminLookup(commands.Cog):
 
                         team_id = account_details.get("wvw_team")
                         if team_id:
-                            try:
-                                team_details = api_client.wvw_team_by_id(team_id)
-                            except Exception:
-                                team_details = None
-
-                            detail_parts.append(self._format_wvw_team_details(team_details, team_id))
+                            detail_parts.append(self._format_wvw_team_details(team_id))
 
                     if detail_parts:
                         account_lines.extend([f"    {part}" for part in detail_parts])
