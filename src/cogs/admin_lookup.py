@@ -61,7 +61,10 @@ class AdminLookup(commands.Cog):
         try:
             team_id_int = int(team_id)
         except (TypeError, ValueError):
-            return f"WvW Team ID: {team_id}"
+            return f"WvW Team: {team_id}"
+
+        if team_id_int == 0:
+            return "WvW Team: Unassigned"
 
         team_names = WVW_TEAM_NAMES.get(team_id_int)
         team_name = None
@@ -71,7 +74,7 @@ class AdminLookup(commands.Cog):
                 team_name = raw_name.strip()
 
         if team_name:
-            return f"WvW Team: {team_name} ({team_id_int})"
+            return f"WvW Team: {team_name}"
 
         return f"WvW Team ID: {team_id_int}"
 
@@ -135,9 +138,7 @@ class AdminLookup(commands.Cog):
             await interaction.response.defer(ephemeral=True)
             db_member = Member.find_or_create(member=member, guild=interaction.guild)
 
-            embed = discord.Embed(title=f"{member.display_name} | {member.name}", description="")
-            embed.set_thumbnail(url=member.display_avatar.url)
-            embed.add_field(name="", value="```------ Account Details ------```", inline=False)
+            embeds = []
 
             if len(db_member.api_keys) > 0:
                 for api_key in db_member.api_keys:
@@ -178,14 +179,29 @@ class AdminLookup(commands.Cog):
 
                     field_name = api_key.name or "Guild Wars 2 Account"
                     formatted_block = "\n".join(detail_lines)
-                    embed.add_field(
+
+                    account_embed = discord.Embed(
+                        title=f"{member.display_name} | {member.name}",
+                        description="",
+                    )
+                    account_embed.set_thumbnail(url=member.display_avatar.url)
+                    account_embed.add_field(
                         name=field_name,
                         value=f"```\n{formatted_block}\n```",
                         inline=False,
                     )
+
+                    embeds.append(account_embed)
             else:
-                embed.add_field(name="API Keys", value="```No API Keys found```", inline=False)
-            await interaction.followup.send(embed=embed, ephemeral=True)
+                no_keys_embed = discord.Embed(
+                    title=f"{member.display_name} | {member.name}",
+                    description="",
+                )
+                no_keys_embed.set_thumbnail(url=member.display_avatar.url)
+                no_keys_embed.add_field(name="API Keys", value="```No API Keys found```", inline=False)
+                embeds.append(no_keys_embed)
+
+            await interaction.followup.send(embeds=embeds, ephemeral=True)
 
 
 async def setup(bot):
