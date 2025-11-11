@@ -49,7 +49,7 @@ WVW_TEAM_NAMES = {
 }
 
 
-SEPARATOR_FIELD_NAME = " - ".join(["-"] * 24)
+SEPARATOR_FIELD_NAME = " - ".join(["-"] * 12)
 
 
 class AdminLookup(commands.Cog):
