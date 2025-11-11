@@ -56,7 +56,6 @@ class GW2ApiClient:
         else:
             print(f"Request failed with status code {response.status_code}")
 
-
     def characters(self, *args, **kwargs):
         ids = kwargs.get('ids', None)
         ping_url = self.url + "/characters"

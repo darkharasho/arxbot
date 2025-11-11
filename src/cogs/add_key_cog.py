@@ -166,7 +166,10 @@ class AddKeyCog(commands.Cog):
                             guild_info = api_client.guild(gw2_guild_id=guild_id)
                             if isinstance(guild_info, dict):
                                 gname = guild_info.get("name")
-                                if gname:
+                                gtag = guild_info.get("tag")
+                                if gname and gtag:
+                                    guild_names.append(f"{gname} [{gtag}]")
+                                elif gname:
                                     guild_names.append(gname)
                         except Exception as e:
                             print(f"Failed to fetch guild info for {guild_id}: {e}")
