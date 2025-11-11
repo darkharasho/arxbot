@@ -222,7 +222,11 @@ class AdminLookup(commands.Cog):
                     )
 
                     if index < api_key_count - 1:
-                        lookup_embed.add_field(name="\u200b", value="\u200b", inline=False)
+                        lookup_embed.add_field(
+                            name="────────────────",
+                            value="\u200b",
+                            inline=False,
+                        )
             else:
                 no_keys_embed = discord.Embed(
                     title=f"{member.display_name} | {member.name}",
