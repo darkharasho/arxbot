@@ -64,6 +64,13 @@ class AdminRelinkCog(commands.Cog):
             if m.gw2_username and m.gw2_username.strip()
         }
 
+        # Build ApiKey lookup to find Discord members by GW2 account name
+        api_key_members = {
+            ak.name.strip(): ak.member
+            for ak in ApiKey.select().where(ApiKey.guild_id == interaction.guild.id)
+            if ak.name and ak.name.strip()
+        }
+
         # 1. Members where wvw_member is False
         non_wvw_members = {m['name'].strip() for m in gw2_members if m.get('name') and not m.get('wvw_member', False)}
 
@@ -136,11 +143,19 @@ class AdminRelinkCog(commands.Cog):
 
         for name, infraction_list in infractions.items():
             member_obj = db_members.get(name, None)
+
+            if not member_obj:
+                member_obj = api_key_members.get(name, None)
+
             discord_name = member_obj.username if member_obj else ""
+            guild_name = ""
+            if member_obj and getattr(member_obj, "guild_id", None):
+                guild_name = getattr(member_obj.guild_id, "name", "")
+
             roles = get_roles_for_member(member_obj)
             infraction = ", ".join(infraction_list)
             # Kicked?, Immune, Notes left blank for manual use in Google Sheets
-            writer.writerow([name, discord_name, infraction, "", "", roles, ""])
+            writer.writerow([name, discord_name, guild_name, infraction, "", "", roles, ""])
 
         output.seek(0)
         date_str = datetime.now().strftime("%Y-%m-%d")
