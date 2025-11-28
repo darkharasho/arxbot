@@ -46,32 +46,54 @@ class SearchCog(commands.Cog):
                 # Perform the SQL lookup
                 results = ApiKey.select().where(ApiKey.name.contains(gw2_account_name))
 
+                embeds = []
                 if results:
                     for api_key in results:
                         member = interaction.guild.get_member(api_key.member.discord_id)
+                        guild_names = []
+                        characters = []
+
                         try:
-                            embed = discord.Embed(title=f"{member.display_name} | {member.name}", description="")
+                            account_data = api_key.api_client().account()
+                            guild_ids = account_data.get("guilds", []) if account_data else []
+                            for guild_id in guild_ids:
+                                guild = GW2ApiClient(api_key=api_key.value, guild_id=guild_id).guild(gw2_guild_id=guild_id)
+                                guild_names.append(f"{guild['name']} [{guild['tag']}]")
+                        except Exception:
+                            guild_names = ["---"]
+
+                        try:
+                            characters = api_key.api_client().characters()
+                        except Exception:
+                            characters = ["---"]
+
+                        try:
+                            embed = discord.Embed(
+                                title=f"{member.display_name} | {member.name}",
+                                description=f"Matched account: {api_key.name}")
                             embed.set_thumbnail(url=member.display_avatar.url)
-                        except Exception as e:
-                            embed = discord.Embed(title=f"N/A - Left discord", description="")
+                        except Exception:
+                            embed = discord.Embed(
+                                title="N/A - Left discord",
+                                description=f"Matched account: {api_key.name}")
+
                         embed.add_field(name="", value="```------ Accounts ------```", inline=False)
                         embed.add_field(name="", value=f"```" +
                                                        "\n".join(apik.name for apik in api_key.member.api_keys)
                                                        + "```", inline=False)
                         embed.add_field(name="", value="```------ Character Details ------```", inline=False)
                         embed.add_field(name="Guilds", value="```" +
-                                                                 "\n".join(char for char in api_key.member.gw2_guild_names())
+                                                                 "\n".join(guild_names)
                                                                  + "```", inline=False)
-                        try:
-                            embed.add_field(name="Characters", value="```" +
-                                                                 "\n".join(char for char in api_key.member.characters())
+                        embed.add_field(name="Characters", value="```" +
+                                                                 "\n".join(characters)
                                                                  + "```", inline=False)
-                        except Exception as e:
-                            embed.add_field(name="Characters", value="```---```", inline=False)
-                else:
-                    embed = discord.Embed(title="No results found.")
 
-                await interaction.followup.send(embed=embed, ephemeral=True)
+                        embeds.append(embed)
+                else:
+                    embeds.append(discord.Embed(title="No results found."))
+
+                await interaction.followup.send(embeds=embeds, ephemeral=True)
             except Exception as e:
                 logging.critical(e, exc_info=True)
                 await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
