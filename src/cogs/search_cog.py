@@ -52,9 +52,18 @@ class SearchCog(commands.Cog):
                 if results:
                     for api_key in results:
                         member = interaction.guild.get_member(api_key.member.discord_id)
-                        guild_names = []
-                        characters = []
 
+                        def normalize_list(values, fallback=None):
+                            if not values:
+                                return fallback or ["---"]
+                            if isinstance(values, (str, bytes)):
+                                return [str(values)]
+                            try:
+                                return ["---"] if values is None else [str(v) for v in values]
+                            except TypeError:
+                                return fallback or ["---"]
+
+                        guild_names = []
                         try:
                             account_data = api_key.api_client().account()
                             guild_ids = account_data.get("guilds", []) if account_data else []
@@ -62,12 +71,16 @@ class SearchCog(commands.Cog):
                                 guild = GW2ApiClient(api_key=api_key.value, guild_id=guild_id).guild(gw2_guild_id=guild_id)
                                 guild_names.append(f"{guild['name']} [{guild['tag']}]")
                         except Exception:
-                            guild_names = ["---"]
+                            guild_names = []
 
                         try:
                             characters = api_key.api_client().characters()
                         except Exception:
-                            characters = ["---"]
+                            characters = []
+
+                        accounts = normalize_list((apik.name for apik in api_key.member.api_keys))
+                        guild_names = normalize_list(guild_names)
+                        characters = normalize_list(characters)
 
                         try:
                             embed = discord.Embed(
@@ -80,16 +93,10 @@ class SearchCog(commands.Cog):
                                 description=f"Matched account: {api_key.name}")
 
                         embed.add_field(name="", value="```------ Accounts ------```", inline=False)
-                        embed.add_field(name="", value=f"```" +
-                                                       "\n".join(apik.name for apik in api_key.member.api_keys)
-                                                       + "```", inline=False)
+                        embed.add_field(name="", value=f"```" + "\n".join(accounts) + "```", inline=False)
                         embed.add_field(name="", value="```------ Character Details ------```", inline=False)
-                        embed.add_field(name="Guilds", value="```" +
-                                                                 "\n".join(guild_names)
-                                                                 + "```", inline=False)
-                        embed.add_field(name="Characters", value="```" +
-                                                                 "\n".join(characters)
-                                                                 + "```", inline=False)
+                        embed.add_field(name="Guilds", value=f"```" + "\n".join(guild_names) + "```", inline=False)
+                        embed.add_field(name="Characters", value=f"```" + "\n".join(characters) + "```", inline=False)
 
                         embeds.append(embed)
                 else:
