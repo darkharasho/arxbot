@@ -98,12 +98,8 @@ class AdminManualRelinkCog(commands.Cog):
                 infractions.append("No API Key")
 
             discord_name = member_obj.username if member_obj else ""
-            guild_name = ""
-            if member_obj and getattr(member_obj, "guild_id", None):
-                guild_name = getattr(member_obj.guild_id, "name", "")
-
             roles = get_roles_for_member(member_obj)
-            writer.writerow([name, discord_name, guild_name, ", ".join(infractions), "", "", roles, ""])
+            writer.writerow([name, discord_name, ", ".join(infractions), "", "", roles, ""])
 
         output.seek(0)
         date_str = datetime.now().strftime("%Y-%m-%d")
