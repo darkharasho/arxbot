@@ -1,4 +1,3 @@
-import pdb
 import discord
 import json
 import logging
@@ -44,7 +43,10 @@ class SearchCog(commands.Cog):
 
             try:
                 # Perform the SQL lookup
-                results = ApiKey.select().where(ApiKey.name.contains(gw2_account_name))
+                results = ApiKey.select().where(
+                    (ApiKey.name.contains(gw2_account_name)) &
+                    (ApiKey.guild_id == interaction.guild.id)
+                )
 
                 embeds = []
                 if results:
